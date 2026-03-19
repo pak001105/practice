@@ -1,218 +1,231 @@
-import streamlit as st
+import json
+import requests
 import pandas as pd
+import streamlit as st
+import folium
+from streamlit_folium import st_folium
 
 st.set_page_config(
-    page_title="서울시 소음과 건강영향 분석",
-    page_icon="📊",
+    page_title="서울시 자치구별 소음과 건강영향 지도",
+    page_icon="🗺️",
     layout="wide"
 )
 
-# ---------------------------
-# 기본 데이터 (보고서 기반 예시값)
-# ---------------------------
-data = pd.DataFrame({
-    "지역유형": ["주거지역", "상권지역", "교통지역"],
-    "예시 자치구": [
-        "노원구, 은평구, 양천구, 도봉구, 성북구",
-        "강남구, 중구, 마포구, 영등포구, 송파구",
-        "서초구, 강서구, 동대문구, 광진구, 구로구"
-    ],
-    "주간소음(dB)": [55.40, 63.86, 76.22],
-    "야간소음(dB)": [47.30, 56.14, 68.04],
-    "스트레스점수": [19.10, 23.86, 32.30],
-    "PSQI": [6.30, 8.23, 11.74],
-    "수면시간(시간)": [6.62, 5.93, 4.99]
-})
+# -----------------------------
+# 기본 데이터
+# -----------------------------
+district_data = pd.DataFrame([
+    # 주거지역
+    {"자치구": "노원구", "지역유형": "주거지역", "주간소음(dB)": 55.40, "야간소음(dB)": 47.30, "스트레스점수": 19.10, "PSQI": 6.30, "수면시간(시간)": 6.62},
+    {"자치구": "은평구", "지역유형": "주거지역", "주간소음(dB)": 55.40, "야간소음(dB)": 47.30, "스트레스점수": 19.10, "PSQI": 6.30, "수면시간(시간)": 6.62},
+    {"자치구": "양천구", "지역유형": "주거지역", "주간소음(dB)": 55.40, "야간소음(dB)": 47.30, "스트레스점수": 19.10, "PSQI": 6.30, "수면시간(시간)": 6.62},
+    {"자치구": "도봉구", "지역유형": "주거지역", "주간소음(dB)": 55.40, "야간소음(dB)": 47.30, "스트레스점수": 19.10, "PSQI": 6.30, "수면시간(시간)": 6.62},
+    {"자치구": "성북구", "지역유형": "주거지역", "주간소음(dB)": 55.40, "야간소음(dB)": 47.30, "스트레스점수": 19.10, "PSQI": 6.30, "수면시간(시간)": 6.62},
 
-policy_data = {
-    "주거지역": {
-        "정책": [
-            "생활소음 관리 강화",
-            "공동주택 차음 보강",
-            "야간 공사시간 제한"
-        ],
-        "기대효과": "주민 체감 소음 감소, 수면 질 개선, 민원 감소"
-    },
-    "상권지역": {
-        "정책": [
-            "심야 영업구역 시간대별 소음관리",
-            "배달 오토바이 소음 저감",
-            "보행친화 가로 설계"
-        ],
-        "기대효과": "심야 소음 피크 완화, 상권 이용 환경 개선"
-    },
-    "교통지역": {
-        "정책": [
-            "30km/h 구간 확대",
-            "저소음 포장 적용",
-            "화물차·버스 야간운행 관리",
-            "방음벽 및 방음창 지원"
-        ],
-        "기대효과": "야간 도로교통 소음 감소, 스트레스 완화, 수면 회복 가능성 증가"
-    }
+    # 상권지역
+    {"자치구": "강남구", "지역유형": "상권지역", "주간소음(dB)": 63.86, "야간소음(dB)": 56.14, "스트레스점수": 23.86, "PSQI": 8.23, "수면시간(시간)": 5.93},
+    {"자치구": "중구", "지역유형": "상권지역", "주간소음(dB)": 63.86, "야간소음(dB)": 56.14, "스트레스점수": 23.86, "PSQI": 8.23, "수면시간(시간)": 5.93},
+    {"자치구": "마포구", "지역유형": "상권지역", "주간소음(dB)": 63.86, "야간소음(dB)": 56.14, "스트레스점수": 23.86, "PSQI": 8.23, "수면시간(시간)": 5.93},
+    {"자치구": "영등포구", "지역유형": "상권지역", "주간소음(dB)": 63.86, "야간소음(dB)": 56.14, "스트레스점수": 23.86, "PSQI": 8.23, "수면시간(시간)": 5.93},
+    {"자치구": "송파구", "지역유형": "상권지역", "주간소음(dB)": 63.86, "야간소음(dB)": 56.14, "스트레스점수": 23.86, "PSQI": 8.23, "수면시간(시간)": 5.93},
+
+    # 교통지역
+    {"자치구": "서초구", "지역유형": "교통지역", "주간소음(dB)": 76.22, "야간소음(dB)": 68.04, "스트레스점수": 32.30, "PSQI": 11.74, "수면시간(시간)": 4.99},
+    {"자치구": "강서구", "지역유형": "교통지역", "주간소음(dB)": 76.22, "야간소음(dB)": 68.04, "스트레스점수": 32.30, "PSQI": 11.74, "수면시간(시간)": 4.99},
+    {"자치구": "동대문구", "지역유형": "교통지역", "주간소음(dB)": 76.22, "야간소음(dB)": 68.04, "스트레스점수": 32.30, "PSQI": 11.74, "수면시간(시간)": 4.99},
+    {"자치구": "광진구", "지역유형": "교통지역", "주간소음(dB)": 76.22, "야간소음(dB)": 68.04, "스트레스점수": 32.30, "PSQI": 11.74, "수면시간(시간)": 4.99},
+    {"자치구": "구로구", "지역유형": "교통지역", "주간소음(dB)": 76.22, "야간소음(dB)": 68.04, "스트레스점수": 32.30, "PSQI": 11.74, "수면시간(시간)": 4.99},
+])
+
+policy_map = {
+    "주거지역": [
+        "생활소음 관리 강화",
+        "공동주택 차음 보강",
+        "야간 공사시간 제한"
+    ],
+    "상권지역": [
+        "심야 영업구역 시간대별 소음관리",
+        "배달 오토바이 소음 저감",
+        "보행친화 가로 설계"
+    ],
+    "교통지역": [
+        "30km/h 구간 확대",
+        "저소음 포장 적용",
+        "화물차·버스 야간운행 관리",
+        "방음벽 및 방음창 지원"
+    ]
 }
 
-# ---------------------------
+district_info = district_data.set_index("자치구").to_dict(orient="index")
+
+# -----------------------------
+# 서울 자치구 GeoJSON 불러오기
+# -----------------------------
+@st.cache_data(show_spinner=False)
+def load_seoul_geojson():
+    url = "https://raw.githubusercontent.com/southkorea/seoul-maps/master/kostat/2013/json/seoul_municipalities_geo_simple.json"
+    response = requests.get(url, timeout=20)
+    response.raise_for_status()
+    return response.json()
+
+geojson_data = load_seoul_geojson()
+
+# -----------------------------
+# GeoJSON 속 자치구 이름 추출 보조 함수
+# -----------------------------
+def extract_district_name(properties: dict) -> str:
+    candidates = [
+        "name",
+        "SIG_KOR_NM",
+        "SIGUNGU_NM",
+        "sggnm",
+        "sgg_nm",
+        "adm_nm",
+    ]
+    for key in candidates:
+        if key in properties and properties[key]:
+            return str(properties[key]).strip()
+    return "알 수 없음"
+
+# -----------------------------
+# 각 feature에 팝업 정보 붙이기
+# -----------------------------
+for feature in geojson_data["features"]:
+    props = feature.get("properties", {})
+    district_name = extract_district_name(props)
+
+    if district_name in district_info:
+        row = district_info[district_name]
+        policies = "<br>".join([f"- {p}" for p in policy_map[row["지역유형"]]])
+
+        popup_html = f"""
+        <div style="width:260px;">
+            <h4 style="margin-bottom:8px;">{district_name}</h4>
+            <b>지역유형:</b> {row['지역유형']}<br>
+            <b>주간소음:</b> {row['주간소음(dB)']:.2f} dB<br>
+            <b>야간소음:</b> {row['야간소음(dB)']:.2f} dB<br>
+            <b>스트레스점수:</b> {row['스트레스점수']:.2f}<br>
+            <b>PSQI:</b> {row['PSQI']:.2f}<br>
+            <b>수면시간:</b> {row['수면시간(시간)']:.2f} 시간<br><br>
+            <b>정책 제안</b><br>
+            {policies}
+        </div>
+        """
+        props["popup_html"] = popup_html
+        props["district_name"] = district_name
+        props["region_type"] = row["지역유형"]
+    else:
+        props["popup_html"] = f"""
+        <div style="width:220px;">
+            <h4>{district_name}</h4>
+            연결된 데이터가 없습니다.
+        </div>
+        """
+        props["district_name"] = district_name
+        props["region_type"] = "미분류"
+
+# -----------------------------
+# 지도 색상
+# -----------------------------
+def get_fill_color(region_type: str) -> str:
+    if region_type == "주거지역":
+        return "#74c69d"
+    if region_type == "상권지역":
+        return "#ffd166"
+    if region_type == "교통지역":
+        return "#ef476f"
+    return "#adb5bd"
+
+def style_function(feature):
+    region_type = feature["properties"].get("region_type", "미분류")
+    return {
+        "fillColor": get_fill_color(region_type),
+        "color": "#333333",
+        "weight": 1.2,
+        "fillOpacity": 0.65,
+    }
+
+def highlight_function(feature):
+    return {
+        "fillOpacity": 0.9,
+        "weight": 2.5,
+        "color": "#111111",
+    }
+
+# -----------------------------
 # 제목
-# ---------------------------
-st.title("서울시 지역 특성별 소음과 건강영향 분석")
+# -----------------------------
+st.title("서울시 자치구별 소음과 건강영향 지도")
 st.markdown("""
-이 앱은 학습한 보고서를 바탕으로 만든 **간단한 Streamlit 시각화 예시**입니다.  
-서울시의 **주거지역 / 상권지역 / 교통지역**을 기준으로  
-소음 노출과 건강지표의 관계를 확인하고, 정책 방향을 살펴볼 수 있습니다.
+서울 지도에서 **자치구를 클릭하면 팝업창으로 소음, 스트레스, 수면지표, 정책 제안**을 볼 수 있습니다.  
+현재 수치는 보고서 기반의 **시나리오형 자치구 대표값**입니다.
 """)
 
-# ---------------------------
-# 사이드바
-# ---------------------------
-st.sidebar.header("메뉴")
-page = st.sidebar.radio(
-    "이동할 화면을 선택하세요",
-    ["보고서 개요", "지역별 비교", "정책 제안", "간단 시뮬레이션"]
+# -----------------------------
+# 지도 생성
+# -----------------------------
+m = folium.Map(
+    location=[37.5665, 126.9780],
+    zoom_start=11,
+    tiles="CartoDB positron"
 )
 
-# ---------------------------
-# 1. 보고서 개요
-# ---------------------------
-if page == "보고서 개요":
-    st.header("보고서 개요")
-
-    st.subheader("주제")
-    st.write("서울시 지역 특성별 소음 노출이 스트레스와 수면에 미치는 영향 분석")
-
-    st.subheader("핵심 결론")
-    st.info(
-        "교통지역의 야간소음이 가장 높았고, 스트레스 점수와 수면장애 지표(PSQI)도 가장 나쁘게 나타났습니다. "
-        "따라서 지역 맞춤형 소음 저감 정책이 필요합니다."
+geojson_layer = folium.GeoJson(
+    geojson_data,
+    name="서울 자치구",
+    style_function=style_function,
+    highlight_function=highlight_function,
+    tooltip=folium.GeoJsonTooltip(
+        fields=["district_name", "region_type"],
+        aliases=["자치구", "지역유형"],
+        sticky=False
+    ),
+    popup=folium.GeoJsonPopup(
+        fields=["popup_html"],
+        labels=False,
+        parse_html=True,
+        max_width=300
     )
+)
 
-    st.subheader("분석 변수")
-    st.write("""
-    - 주간소음(dB)  
-    - 야간소음(dB)  
-    - 스트레스 점수  
-    - 수면의 질(PSQI)  
-    - 수면시간  
-    """)
+geojson_layer.add_to(m)
+folium.LayerControl().add_to(m)
 
-    st.subheader("원자료 해석 시 주의점")
-    st.warning(
-        "이 앱은 보고서 기반의 학습용 예시입니다. "
-        "실제 행정통계나 측정망 데이터가 아니라, 보고서의 시나리오형 분석값을 기반으로 구성되었습니다."
-    )
+# 지도 출력
+map_data = st_folium(m, width=None, height=700)
 
-# ---------------------------
-# 2. 지역별 비교
-# ---------------------------
-elif page == "지역별 비교":
-    st.header("지역별 비교")
+# -----------------------------
+# 클릭한 자치구 정보 아래에 다시 표시
+# -----------------------------
+st.markdown("---")
+st.subheader("자치구 상세 정보")
 
-    st.subheader("기초 데이터")
-    st.dataframe(data, use_container_width=True)
+clicked = None
+if map_data and map_data.get("last_active_drawing"):
+    clicked = map_data["last_active_drawing"].get("properties", {}).get("district_name")
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.subheader("주간소음 비교")
-        st.bar_chart(data.set_index("지역유형")["주간소음(dB)"])
-
-        st.subheader("야간소음 비교")
-        st.bar_chart(data.set_index("지역유형")["야간소음(dB)"])
-
-    with col2:
-        st.subheader("스트레스 점수 비교")
-        st.bar_chart(data.set_index("지역유형")["스트레스점수"])
-
-        st.subheader("수면시간 비교")
-        st.bar_chart(data.set_index("지역유형")["수면시간(시간)"])
-
-    st.subheader("해석")
-    st.write("""
-    - **주거지역**은 상대적으로 소음이 낮고 수면시간이 가장 길게 나타났습니다.  
-    - **상권지역**은 주거지역보다 소음과 스트레스 수준이 높았습니다.  
-    - **교통지역**은 주간·야간 소음이 가장 높고, 스트레스 점수와 PSQI도 가장 높아 건강영향이 가장 크게 나타났습니다.
-    """)
-
-# ---------------------------
-# 3. 정책 제안
-# ---------------------------
-elif page == "정책 제안":
-    st.header("지역별 정책 제안")
-
-    selected_region = st.selectbox(
-        "지역 유형을 선택하세요",
-        ["주거지역", "상권지역", "교통지역"]
-    )
-
-    st.subheader(f"{selected_region} 정책")
-    for idx, item in enumerate(policy_data[selected_region]["정책"], start=1):
-        st.write(f"{idx}. {item}")
-
-    st.subheader("기대효과")
-    st.success(policy_data[selected_region]["기대효과"])
-
-    st.subheader("설명")
-    if selected_region == "주거지역":
-        st.write("주거지역은 생활소음과 야간 생활환경 관리가 중요합니다.")
-    elif selected_region == "상권지역":
-        st.write("상권지역은 심야 영업과 배달·이동 소음 관리가 중요합니다.")
-    else:
-        st.write("교통지역은 차량 흐름과 야간 교통소음을 직접 줄이는 정책이 핵심입니다.")
-
-# ---------------------------
-# 4. 간단 시뮬레이션
-# ---------------------------
-elif page == "간단 시뮬레이션":
-    st.header("야간소음 저감 시뮬레이션")
-
-    region = st.selectbox("시뮬레이션 지역 선택", data["지역유형"].tolist())
-    reduction = st.slider("야간소음 저감량(dB)", min_value=0, max_value=10, value=3)
-
-    row = data[data["지역유형"] == region].iloc[0]
-
-    current_night_noise = row["야간소음(dB)"]
-    current_stress = row["스트레스점수"]
-    current_psqi = row["PSQI"]
-    current_sleep = row["수면시간(시간)"]
-
-    # 보고서 설명용 단순 추정식
-    # 야간소음 1dB 감소 시:
-    # 스트레스 0.48 감소, PSQI 0.20 감소, 수면시간 0.053시간 증가
-    expected_night_noise = max(current_night_noise - reduction, 0)
-    expected_stress = max(current_stress - (0.48 * reduction), 0)
-    expected_psqi = max(current_psqi - (0.20 * reduction), 0)
-    expected_sleep = current_sleep + (0.053 * reduction)
+if clicked and clicked in district_info:
+    row = district_info[clicked]
 
     col1, col2, col3 = st.columns(3)
+    col1.metric("주간소음(dB)", f"{row['주간소음(dB)']:.2f}")
+    col2.metric("야간소음(dB)", f"{row['야간소음(dB)']:.2f}")
+    col3.metric("스트레스점수", f"{row['스트레스점수']:.2f}")
 
-    with col1:
-        st.metric(
-            "야간소음(dB)",
-            f"{expected_night_noise:.2f}",
-            delta=f"{-reduction:.2f}"
-        )
+    col4, col5 = st.columns(2)
+    col4.metric("PSQI", f"{row['PSQI']:.2f}")
+    col5.metric("수면시간(시간)", f"{row['수면시간(시간)']:.2f}")
 
-    with col2:
-        st.metric(
-            "예상 스트레스 점수",
-            f"{expected_stress:.2f}",
-            delta=f"{expected_stress - current_stress:.2f}"
-        )
+    st.write(f"**선택한 자치구:** {clicked}")
+    st.write(f"**지역유형:** {row['지역유형']}")
+    st.write("**정책 제안:**")
+    for p in policy_map[row["지역유형"]]:
+        st.write(f"- {p}")
+else:
+    st.info("지도에서 자치구를 클릭하면 여기에도 상세 정보가 표시됩니다.")
 
-    with col3:
-        st.metric(
-            "예상 PSQI",
-            f"{expected_psqi:.2f}",
-            delta=f"{expected_psqi - current_psqi:.2f}"
-        )
-
-    st.metric(
-        "예상 수면시간(시간)",
-        f"{expected_sleep:.2f}",
-        delta=f"{expected_sleep - current_sleep:.2f}"
-    )
-
-    st.caption(
-        "※ 본 시뮬레이션은 보고서의 설명용 추정치를 단순 적용한 예시이며, "
-        "실제 정책효과를 정확히 예측하는 모델은 아닙니다."
-    )
+# -----------------------------
+# 전체 데이터 표
+# -----------------------------
+with st.expander("전체 자치구 데이터 보기"):
+    st.dataframe(district_data, use_container_width=True)
