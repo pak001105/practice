@@ -8,7 +8,7 @@ import pandas as pd
 import requests
 import streamlit as st
 
-st.set_page_config(page_title="영화 추천 사이트", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="무드픽", page_icon="🎬", layout="wide")
 
 BASE_DIR = Path(__file__).parent
 DEFAULT_FILES = [
@@ -226,8 +226,8 @@ def 포스터주소가져오기(row, tmdb_api_key):
 
 def 스타일적용(다크모드=True):
     bg = "#030712" if 다크모드 else "#F3F4F6"
-    text = "#F9FAFB" if 다크모드 else "#111827"
-    sub = "#D1D5DB" if 다크모드 else "#4B5563"
+    text = "#FFFFFF" if 다크모드 else "#111827"
+    sub = "#E5E7EB" if 다크모드 else "#4B5563"
     card_bg = "#111827" if 다크모드 else "#FFFFFF"
     border = "#374151" if 다크모드 else "#E5E7EB"
 
@@ -241,6 +241,18 @@ def 스타일적용(다크모드=True):
         .block-container {{
             padding-top: 1.2rem;
             padding-bottom: 2rem;
+        }}
+        h1, h2, h3, h4, h5, h6, p, label, div, span {{
+            color: {text};
+        }}
+        .stMarkdown, .stText, .stCaption {{
+            color: {text} !important;
+        }}
+        .stSelectbox label, .stMultiSelect label, .stTextInput label, .stNumberInput label {{
+            color: {text} !important;
+        }}
+        .st-emotion-cache-10trblm, .st-emotion-cache-16idsys {{
+            color: {text} !important;
         }}
         .movie-card {{
             border-radius: 20px;
@@ -283,16 +295,16 @@ def 스타일적용(다크모드=True):
             font-size: 1.08rem;
             font-weight: 700;
             margin-bottom: 6px;
-            color: {text};
+            color: {text} !important;
         }}
         .movie-meta {{
             font-size: .88rem;
             margin-bottom: 6px;
-            color: {sub};
+            color: {sub} !important;
         }}
         .hashtags {{
             font-size: .82rem;
-            color: {sub};
+            color: {sub} !important;
             margin-top: 8px;
         }}
         .recommend-box {{
@@ -300,9 +312,11 @@ def 스타일적용(다크모드=True):
             border-radius: 18px;
             padding: 14px;
             margin-bottom: 12px;
+            background: {card_bg};
+            color: {text};
         }}
         .small-note {{
-            color: {sub};
+            color: {sub} !important;
             font-size: .9rem;
         }}
         .page-box {{
@@ -311,6 +325,10 @@ def 스타일적용(다크모드=True):
             border: 1px solid {border};
             background: {card_bg};
             margin-bottom: 18px;
+            color: {text};
+        }}
+        section[data-testid="stSidebar"] * {{
+            color: {text} !important;
         }}
         </style>
         """,
@@ -370,8 +388,8 @@ def 메인():
 
     스타일적용(다크모드)
 
-    st.title("🎬 영화 추천 탐색기")
-    st.caption("기분, 상황, 해시태그, 국가, 장르, 시대별로 영화를 검색하고 같은 장르의 작품을 추천받을 수 있습니다.")
+    st.title("🎬 무드픽")
+    st.caption("기분, 상황, 해시태그, 국가, 장르, 시대별로 영화를 탐색하고 지금 분위기에 맞는 작품을 추천받아보세요.")
 
     tmdb_api_key = None
     if "TMDB_API_KEY" in st.secrets:
