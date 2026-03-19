@@ -226,34 +226,71 @@ def 포스터주소가져오기(row, tmdb_api_key):
 
 def 스타일적용(다크모드=True):
     bg = "#030712" if 다크모드 else "#F3F4F6"
-    text = "#FFFFFF" if 다크모드 else "#111827"
+    main_text = "#FFFFFF" if 다크모드 else "#111827"
     sub = "#E5E7EB" if 다크모드 else "#4B5563"
     card_bg = "#111827" if 다크모드 else "#FFFFFF"
     border = "#374151" if 다크모드 else "#E5E7EB"
+
+    sidebar_text = "#111827"
+    sidebar_label = "#111827"
+    sidebar_input_text = "#111827"
 
     st.markdown(
         f"""
         <style>
         .stApp {{
             background: {bg};
-            color: {text};
+            color: {main_text};
         }}
+
         .block-container {{
             padding-top: 1.2rem;
             padding-bottom: 2rem;
         }}
-        h1, h2, h3, h4, h5, h6, p, label, div, span {{
-            color: {text};
+
+        /* 메인 본문 글씨 */
+        section.main h1, section.main h2, section.main h3, section.main h4, section.main h5, section.main h6,
+        section.main p, section.main label, section.main div, section.main span {{
+            color: {main_text};
         }}
-        .stMarkdown, .stText, .stCaption {{
-            color: {text} !important;
+
+        .stMarkdown, .stCaption {{
+            color: {main_text} !important;
         }}
-        .stSelectbox label, .stMultiSelect label, .stTextInput label, .stNumberInput label {{
-            color: {text} !important;
+
+        /* 사이드바는 항상 검은 글씨 */
+        section[data-testid="stSidebar"] {{
+            color: {sidebar_text} !important;
         }}
-        .st-emotion-cache-10trblm, .st-emotion-cache-16idsys {{
-            color: {text} !important;
+
+        section[data-testid="stSidebar"] * {{
+            color: {sidebar_text} !important;
         }}
+
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] div {{
+            color: {sidebar_label} !important;
+        }}
+
+        /* input/select 내부 글자 검은색 */
+        section[data-testid="stSidebar"] input,
+        section[data-testid="stSidebar"] textarea {{
+            color: {sidebar_input_text} !important;
+            -webkit-text-fill-color: {sidebar_input_text} !important;
+        }}
+
+        section[data-testid="stSidebar"] [data-baseweb="select"] *,
+        section[data-testid="stSidebar"] [data-baseweb="input"] *,
+        section[data-testid="stSidebar"] [data-baseweb="tag"] *,
+        section[data-testid="stSidebar"] .stMultiSelect *,
+        section[data-testid="stSidebar"] .stSelectbox *,
+        section[data-testid="stSidebar"] .stTextInput *,
+        section[data-testid="stSidebar"] .stNumberInput * {{
+            color: {sidebar_input_text} !important;
+        }}
+
         .movie-card {{
             border-radius: 20px;
             overflow: hidden;
@@ -262,9 +299,11 @@ def 스타일적용(다크모드=True):
             background: {card_bg};
             border: 1px solid {border};
         }}
+
         .poster-wrap {{
             position: relative;
         }}
+
         .poster-img {{
             width: 100%;
             height: 420px;
@@ -272,6 +311,7 @@ def 스타일적용(다크모드=True):
             display: block;
             background: #111827;
         }}
+
         .hover-panel {{
             position: absolute;
             inset: 0;
@@ -285,50 +325,55 @@ def 스타일적용(다크모드=True):
             justify-content: flex-end;
             font-size: .92rem;
         }}
+
         .poster-wrap:hover .hover-panel {{
             opacity: 1;
         }}
+
         .movie-body {{
             padding: 14px 16px 18px 16px;
         }}
+
         .movie-title {{
             font-size: 1.08rem;
             font-weight: 700;
             margin-bottom: 6px;
-            color: {text} !important;
+            color: {main_text} !important;
         }}
+
         .movie-meta {{
             font-size: .88rem;
             margin-bottom: 6px;
             color: {sub} !important;
         }}
+
         .hashtags {{
             font-size: .82rem;
             color: {sub} !important;
             margin-top: 8px;
         }}
+
         .recommend-box {{
             border: 1px solid rgba(148,163,184,.25);
             border-radius: 18px;
             padding: 14px;
             margin-bottom: 12px;
             background: {card_bg};
-            color: {text};
+            color: {main_text};
         }}
+
         .small-note {{
             color: {sub} !important;
             font-size: .9rem;
         }}
+
         .page-box {{
             padding: 10px 14px;
             border-radius: 14px;
             border: 1px solid {border};
             background: {card_bg};
             margin-bottom: 18px;
-            color: {text};
-        }}
-        section[data-testid="stSidebar"] * {{
-            color: {text} !important;
+            color: {main_text};
         }}
         </style>
         """,
