@@ -1476,143 +1476,282 @@ def 영화팝업(row, tmdb_api_key):
 
     st.markdown(f"""
     <style>
-    /* 팝업 대화상자 높이 제한 */
     [data-testid="stDialog"] > div {{
-        max-height: 88vh !important;
+        max-height: 90vh !important;
         overflow: hidden !important;
     }}
-    [data-testid="stDialog"] * {{ color:#111 !important; }}
+    [data-testid="stDialog"] * {{ color: #111 !important; }}
+
+    /* ── 팝업 전체 레이아웃 ── */
     .popup-outer {{
         display: flex;
-        gap: 16px;
-        height: 78vh;
-        max-height: 78vh;
+        gap: 20px;
+        height: 76vh;
+        max-height: 76vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }}
+
+    /* 왼쪽: 포스터 고정 */
     .popup-left {{
-        flex: 0 0 220px;
+        flex: 0 0 210px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0;
     }}
     .popup-left img {{
         width: 100%;
-        border-radius: 12px;
+        height: 100%;
+        border-radius: 14px;
         object-fit: cover;
-        flex: 1;
-        min-height: 0;
+        display: block;
     }}
-    .popup-btn-row {{
-        display: flex;
-        gap: 6px;
-    }}
-    .popup-btn {{
-        flex: 1;
-        padding: 7px 4px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        background: #f8fafc;
-        color: #111 !important;
-        font-size: .78rem;
-        font-weight: 600;
-        text-align: center;
-        cursor: default;
-    }}
+
+    /* 오른쪽: 스크롤 정보 패널 */
     .popup-right {{
         flex: 1;
         overflow-y: auto;
-        padding-right: 6px;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+        padding-right: 8px;
+        padding-bottom: 8px;
     }}
-    /* 스크롤바 스타일 */
     .popup-right::-webkit-scrollbar {{ width: 5px; }}
     .popup-right::-webkit-scrollbar-track {{ background: #f1f5f9; border-radius: 4px; }}
-    .popup-right::-webkit-scrollbar-thumb {{ background: #cbd5e1; border-radius: 4px; }}
-    .popup-title {{ font-size: 1.1rem; font-weight: 800; color: #0f172a !important; margin-bottom: 2px; }}
-    .popup-meta {{ font-size: .75rem; color: #64748b !important; margin-bottom: 4px; }}
-    .popup-oneliner {{ font-size: .82rem; color: #334155 !important; font-style: italic; margin-bottom: 6px; }}
-    .info-badge {{
-        display: inline-block; font-size: .72rem; color: #1e40af !important;
-        background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;
-        padding: 2px 8px; margin-bottom: 4px;
+    .popup-right::-webkit-scrollbar-thumb {{ background: #94a3b8; border-radius: 4px; }}
+
+    /* 제목 영역 */
+    .p-title {{
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: #0f172a !important;
+        line-height: 1.3;
+        margin-bottom: 5px;
     }}
-    .stat-row {{ display: flex; gap: 6px; margin-bottom: 8px; }}
-    .sbox {{
-        flex: 1; background: #f8fafc; border: 1px solid #e2e8f0;
-        border-radius: 8px; padding: 5px 8px; text-align: center;
+    .p-meta {{
+        font-size: .82rem;
+        color: #475569 !important;
+        margin-bottom: 5px;
+        line-height: 1.5;
     }}
-    .slbl {{ color: #64748b !important; font-size: .60rem; display: block; }}
-    .sval {{ color: #0f172a !important; font-size: .80rem; font-weight: 700; }}
-    .sec-title {{
-        font-size: .63rem; color: #94a3b8 !important; font-weight: 700;
-        text-transform: uppercase; letter-spacing: .07em;
-        border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 4px; margin-bottom: 3px;
+    .p-series {{
+        display: inline-block;
+        font-size: .76rem;
+        color: #1e40af !important;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        padding: 2px 9px;
+        margin-bottom: 6px;
     }}
-    .irow {{ display: flex; gap: 4px; margin-bottom: 3px; }}
-    .ilbl {{ color: #94a3b8 !important; font-size: .68rem; min-width: 46px; flex-shrink: 0; }}
-    .ival {{ color: #1e293b !important; font-size: .75rem; flex: 1; line-height: 1.4; }}
-    .synbox {{
-        background: #f8fafc; border-left: 3px solid #3b82f6;
-        padding: 6px 10px; border-radius: 0 7px 7px 0;
-        font-size: .76rem; color: #1e293b !important; line-height: 1.55;
-        margin-bottom: 4px;
+    .p-oneliner {{
+        font-size: .88rem;
+        color: #334155 !important;
+        font-style: italic;
+        line-height: 1.55;
+        padding: 7px 11px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border-left: 3px solid #e2e8f0;
     }}
-    .tag-wrap {{ display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }}
-    .ptag {{
-        display: inline-block; padding: 2px 7px; border-radius: 999px;
-        background: #e8f0fe; color: #1a56db !important; font-size: .68rem; border: 1px solid #c7d7fc;
+
+    /* 통계 박스 */
+    .p-stat-row {{
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
     }}
-    .otag {{
-        display: inline-block; padding: 2px 7px; border-radius: 999px;
-        background: #fef3c7; color: #92400e !important; font-size: .68rem; border: 1px solid #fde68a;
+    .p-stat {{
+        flex: 1;
+        background: #f1f5f9;
+        border-radius: 10px;
+        padding: 8px 10px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
     }}
-    .etag {{
-        display: inline-block; padding: 2px 7px; border-radius: 999px;
-        background: #f0fdf4; color: #166534 !important; font-size: .68rem; border: 1px solid #bbf7d0;
+    .p-stat-lbl {{
+        display: block;
+        font-size: .70rem;
+        color: #64748b !important;
+        margin-bottom: 2px;
+        font-weight: 500;
     }}
-    .revbox {{
-        background: #fffbeb; border: 1px solid #fde68a; padding: 6px 10px;
-        border-radius: 7px; font-size: .74rem; color: #78350f !important; font-style: italic;
-        margin-bottom: 4px;
+    .p-stat-val {{
+        font-size: .90rem;
+        font-weight: 800;
+        color: #0f172a !important;
+    }}
+
+    /* 섹션 구분 */
+    .p-sec {{
+        font-size: .72rem;
+        font-weight: 700;
+        color: #64748b !important;
+        letter-spacing: .04em;
+        padding: 6px 0 4px 0;
+        margin-top: 10px;
+        border-top: 1px solid #e9edf3;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }}
+    .p-sec::before {{
+        content: "";
+        display: inline-block;
+        width: 3px;
+        height: 11px;
+        background: #3b82f6;
+        border-radius: 2px;
+    }}
+
+    /* 정보 행 */
+    .p-row {{
+        display: flex;
+        gap: 8px;
+        margin-bottom: 5px;
+        align-items: flex-start;
+        padding: 4px 8px;
+        background: #f8fafc;
+        border-radius: 7px;
+    }}
+    .p-lbl {{
+        font-size: .74rem;
+        font-weight: 600;
+        color: #64748b !important;
+        min-width: 50px;
+        flex-shrink: 0;
+        padding-top: 1px;
+    }}
+    .p-val {{
+        font-size: .82rem;
+        color: #1e293b !important;
+        flex: 1;
+        line-height: 1.5;
+    }}
+
+    /* 줄거리 */
+    .p-synopsis {{
+        background: #f8fafc;
+        border-left: 3px solid #3b82f6;
+        padding: 9px 12px;
+        border-radius: 0 9px 9px 0;
+        font-size: .83rem;
+        color: #1e293b !important;
+        line-height: 1.65;
+        margin-top: 2px;
+    }}
+
+    /* 태그 */
+    .p-tags {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 4px;
+    }}
+    .p-etag {{
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: #f0fdf4;
+        color: #15803d !important;
+        font-size: .76rem;
+        font-weight: 500;
+        border: 1px solid #bbf7d0;
+    }}
+    .p-ptag {{
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8 !important;
+        font-size: .76rem;
+        font-weight: 500;
+        border: 1px solid #bfdbfe;
+    }}
+    .p-otag {{
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: #fffbeb;
+        color: #b45309 !important;
+        font-size: .76rem;
+        font-weight: 500;
+        border: 1px solid #fde68a;
+    }}
+
+    /* 리뷰 */
+    .p-review {{
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        padding: 9px 12px;
+        border-radius: 9px;
+        font-size: .82rem;
+        color: #78350f !important;
+        font-style: italic;
+        line-height: 1.6;
+        margin-top: 4px;
     }}
     </style>
 
     <div class="popup-outer">
-        <!-- 왼쪽: 포스터 고정 -->
+        <!-- 왼쪽 포스터 -->
         <div class="popup-left">
             <img src="{escape(poster, quote=True)}" alt="{escape(title)} 포스터">
         </div>
 
-        <!-- 오른쪽: 정보 스크롤 영역 -->
+        <!-- 오른쪽 정보 (스크롤) -->
         <div class="popup-right">
-            <div class="popup-title">{escape(title)}</div>
-            <div class="popup-meta">{escape(country)} · {escape(genre)}/{escape(subgenre)} · {year} · {runtime} · {escape(age_rating)} · ★{rating}</div>
-            {series_row}
-            <div class="popup-oneliner">{escape(one_liner)}</div>
 
-            <div class="stat-row">
-                <div class="sbox"><span class="slbl">평점</span><span class="sval">★{rating}</span></div>
-                <div class="sbox"><span class="slbl">관객수</span><span class="sval">{audience}</span></div>
-                <div class="sbox"><span class="slbl">흥행액</span><span class="sval">{gross}</span></div>
+            <div class="p-title">{escape(title)}</div>
+            <div class="p-meta">
+                🌏 {escape(country)}&nbsp;&nbsp;|&nbsp;&nbsp;
+                🎬 {escape(genre)} · {escape(subgenre)}&nbsp;&nbsp;|&nbsp;&nbsp;
+                📅 {year}&nbsp;&nbsp;|&nbsp;&nbsp;
+                ⏱ {runtime}&nbsp;&nbsp;|&nbsp;&nbsp;
+                🔞 {escape(age_rating)}&nbsp;&nbsp;|&nbsp;&nbsp;
+                ⭐ {rating}
+            </div>
+            {series_row}
+            <div class="p-oneliner">"{escape(one_liner)}"</div>
+
+            <!-- 통계 -->
+            <div class="p-stat-row">
+                <div class="p-stat">
+                    <span class="p-stat-lbl">평점</span>
+                    <span class="p-stat-val">⭐ {rating}</span>
+                </div>
+                <div class="p-stat">
+                    <span class="p-stat-lbl">관객수</span>
+                    <span class="p-stat-val">{audience}명</span>
+                </div>
+                <div class="p-stat">
+                    <span class="p-stat-lbl">글로벌 흥행</span>
+                    <span class="p-stat-val">{gross}</span>
+                </div>
             </div>
 
-            <div class="sec-title">기본 정보</div>
-            <div class="irow"><span class="ilbl">감독</span><span class="ival">{escape(director)}</span></div>
-            <div class="irow"><span class="ilbl">출연진</span><span class="ival">{escape(cast)}</span></div>
-            <div class="irow"><span class="ilbl">수상</span><span class="ival">{escape(awards)}</span></div>
+            <!-- 기본 정보 -->
+            <div class="p-sec">기본 정보</div>
+            <div class="p-row"><span class="p-lbl">감독</span><span class="p-val">{escape(director)}</span></div>
+            <div class="p-row"><span class="p-lbl">출연진</span><span class="p-val">{escape(cast)}</span></div>
+            <div class="p-row"><span class="p-lbl">수상</span><span class="p-val">{escape(awards)}</span></div>
 
-            <div class="sec-title">줄거리</div>
-            <div class="synbox">{escape(synopsis)}</div>
+            <!-- 줄거리 -->
+            <div class="p-sec">줄거리</div>
+            <div class="p-synopsis">{escape(synopsis)}</div>
 
-            <div class="sec-title">감정 · 태그</div>
-            <div class="tag-wrap">{tags_html}</div>
+            <!-- 태그 -->
+            <div class="p-sec">감정 · 상황 · 특징 태그</div>
+            <div class="p-tags">
+                {"".join([f"<span class='p-etag'>{escape(t)}</span>" for t in emotion_tags])}
+                {"".join([f"<span class='p-ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags])}
+            </div>
 
-            <div class="sec-title">OTT</div>
-            <div class="tag-wrap">{ott_html}</div>
+            <!-- OTT -->
+            <div class="p-sec">OTT 플랫폼</div>
+            <div class="p-tags">
+                {"".join([f"<span class='p-otag'>▶ {escape(o)}</span>" for o in ott_list]) or "<span style='color:#94a3b8;font-size:.78rem'>정보 없음</span>"}
+            </div>
 
-            <div class="sec-title">리뷰</div>
-            <div class="revbox">💬 {escape(review)}</div>
+            <!-- 리뷰 -->
+            <div class="p-sec">대표 리뷰</div>
+            <div class="p-review">💬 {escape(review)}</div>
+
         </div>
     </div>
     """, unsafe_allow_html=True)
