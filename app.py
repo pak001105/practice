@@ -1100,24 +1100,36 @@ def 스타일적용(다크모드=True):
         }}
         .block-container {{
             max-width: 1480px;
-            padding-top: 1rem;
+            padding-top: 3.5rem;
             padding-bottom: 2rem;
         }}
         h1, h2, h3, h4, h5, h6, p, label, div, span,
         .stMarkdown, .stCaption, [data-testid="stExpander"] * {{
             color: {main_text} !important;
             opacity: 1 !important;
+            overflow: visible !important;
         }}
+        /* 메트릭: 다크모드 흰색, 라이트모드 검은색 */
         [data-testid="stMetricValue"],
         [data-testid="stMetricLabel"],
         [data-testid="stMetric"] * {{
-            color: #111827 !important;
+            color: {"#FFFFFF" if 다크모드 else "#111827"} !important;
         }}
+        /* 입력 위젯 안 글씨는 배경이 흰색이므로 항상 검은색 */
         [data-baseweb="input"] input,
         [data-baseweb="select"] *,
         [data-baseweb="textarea"] textarea {{
             color: #111827 !important;
             -webkit-text-fill-color: #111827 !important;
+        }}
+        [data-testid="stNumberInput"] input {{
+            color: #111827 !important;
+            -webkit-text-fill-color: #111827 !important;
+        }}
+        /* 다크모드: 모든 버튼 글씨 검은색 (버튼 배경은 흰색/밝음) */
+        .stButton > button {{
+            color: #111827 !important;
+            font-weight: 600 !important;
         }}
         section[data-testid="stSidebar"] * {{
             color: {sidebar_text} !important;
@@ -1126,6 +1138,9 @@ def 스타일적용(다크모드=True):
         section[data-testid="stSidebar"] textarea {{
             color: {sidebar_text} !important;
             -webkit-text-fill-color: {sidebar_text} !important;
+        }}
+        section[data-testid="stSidebar"] .stButton > button {{
+            color: {sidebar_text} !important;
         }}
         .hero-wrap {{
             position: relative;
