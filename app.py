@@ -241,8 +241,6 @@ def 수상여부생성(영화명):
         "라라랜드": "아카데미 다수 부문 수상",
         "킹스 스피치": "아카데미 작품상 포함 주요 부문 수상",
         "센과 치히로의 행방불명": "아카데미 장편애니메이션상 수상",
-        "어느 가족": "칸영화제 황금종려상 수상",
-        "헤어질 결심": "칸영화제 감독상 수상",
         "올드보이": "칸영화제 심사위원대상 수상",
         "판의 미로": "아카데미 기술 부문 수상",
         "와호장룡": "아카데미 외국어영화상 포함 주요 부문 수상",
@@ -325,66 +323,56 @@ def 기본데이터생성():
             ("아바타: 물의 길", 2022, "SF", 192, 7.6, "제임스 카메론", "Avatar The Way of Water"),
             ("어벤져스: 엔드게임", 2019, "액션", 181, 8.4, "안소니 루소, 조 루소", "Avengers Endgame"),
             ("어벤져스: 인피니티 워", 2018, "액션", 149, 8.4, "안소니 루소, 조 루소", "Avengers Infinity War"),
-            ("스파이더맨: 노 웨이 홈", 2021, "액션", 148, 8.2, "존 왓츠", "Spider-Man No Way Home"),
             ("타이타닉", 1997, "로맨스", 194, 7.9, "제임스 카메론", "Titanic"),
             ("인터스텔라", 2014, "SF", 169, 8.7, "크리스토퍼 놀란", "Interstellar"),
-            ("인셉션", 2010, "스릴러", 148, 8.8, "크리스토퍼 놀란", "Inception"),
             ("다크 나이트", 2008, "액션", 152, 9.0, "크리스토퍼 놀란", "The Dark Knight"),
-            ("조커", 2019, "드라마", 122, 8.4, "토드 필립스", "Joker"),
             ("라라랜드", 2016, "로맨스", 128, 8.0, "데이미언 셔젤", "La La Land"),
-            ("겨울왕국", 2013, "애니메이션", 102, 7.4, "크리스 벅, 제니퍼 리", "Frozen"),
         ],
         "한국": [
             ("명량", 2014, "액션", 128, 7.1, "김한민", "The Admiral Roaring Currents"),
             ("극한직업", 2019, "코미디", 111, 7.1, "이병헌", "Extreme Job"),
             ("신과함께-죄와 벌", 2017, "판타지", 139, 7.2, "김용화", "Along with the Gods The Two Worlds"),
-            ("신과함께-인과 연", 2018, "판타지", 141, 7.1, "김용화", "Along with the Gods The Last 49 Days"),
             ("국제시장", 2014, "드라마", 126, 7.8, "윤제균", "Ode to My Father"),
             ("베테랑", 2015, "액션", 123, 7.0, "류승완", "Veteran 2015"),
             ("서울의 봄", 2023, "드라마", 141, 8.3, "김성수", "12.12 The Day"),
             ("암살", 2015, "액션", 139, 7.3, "최동훈", "Assassination 2015"),
             ("범죄도시 2", 2022, "액션", 106, 7.2, "이상용", "The Roundup"),
-            ("범죄도시 3", 2023, "액션", 105, 6.6, "이상용", "The Roundup No Way Out"),
             ("7번방의 선물", 2013, "코미디", 127, 8.2, "이환경", "Miracle in Cell No 7"),
             ("도둑들", 2012, "액션", 135, 6.8, "최동훈", "The Thieves"),
             ("변호인", 2013, "드라마", 127, 7.7, "양우석", "The Attorney"),
             ("부산행", 2016, "스릴러", 118, 7.6, "연상호", "Train to Busan"),
             ("기생충", 2019, "스릴러", 132, 8.5, "봉준호", "Parasite"),
             ("올드보이", 2003, "스릴러", 120, 8.4, "박찬욱", "Oldboy"),
-            ("태극기 휘날리며", 2004, "드라마", 148, 8.0, "강제규", "Tae Guk Gi The Brotherhood of War"),
-            ("왕의 남자", 2005, "드라마", 119, 7.4, "이준익", "The King and the Clown"),
-            ("실미도", 2003, "액션", 135, 7.1, "강우석", "Silmido"),
             ("괴물", 2006, "스릴러", 119, 7.1, "봉준호", "The Host 2006"),
+            ("헤어질 결심", 2022, "로맨스", 138, 7.3, "박찬욱", "Decision to Leave"),
+            ("과속스캔들", 2008, "코미디", 108, 7.2, "강형철", "Scandal Makers"),
+            ("광해, 왕이 된 남자", 2012, "드라마", 131, 7.8, "추창민", "Masquerade"),
+            ("내부자들", 2015, "드라마", 130, 7.8, "우민호", "Inside Men"),
+            ("1987", 2017, "드라마", 129, 7.8, "장준환", "1987 When the Day Comes"),
         ],
         "영국": [
             ("007 스카이폴", 2012, "액션", 143, 7.8, "샘 멘데스", "Skyfall"),
             ("해리 포터와 죽음의 성물 2", 2011, "판타지", 130, 8.1, "데이비드 예이츠", "Harry Potter and the Deathly Hallows Part 2"),
             ("킹스 스피치", 2010, "드라마", 118, 8.0, "톰 후퍼", "The King's Speech"),
-            ("노팅 힐", 1999, "로맨스", 124, 7.2, "로저 미첼", "Notting Hill"),
         ],
         "스페인": [
             ("판의 미로", 2006, "판타지", 118, 8.2, "기예르모 델 토로", "Pan's Labyrinth"),
-            ("더 임파서블", 2012, "드라마", 114, 7.6, "후안 안토니오 바요나", "The Impossible"),
             ("인비저블 게스트", 2016, "스릴러", 106, 8.0, "오리올 파울로", "The Invisible Guest"),
         ],
         "인도": [
             ("세 얼간이", 2009, "코미디", 170, 8.4, "라지쿠마르 히라니", "3 Idiots"),
             ("당갈", 2016, "드라마", 161, 8.3, "니테시 티와리", "Dangal"),
-            ("RRR", 2022, "액션", 182, 7.8, "S. S. 라자몰리", "RRR"),
         ],
         "일본": [
             ("센과 치히로의 행방불명", 2001, "애니메이션", 125, 8.6, "미야자키 하야오", "Spirited Away"),
             ("너의 이름은", 2016, "로맨스", 106, 8.4, "신카이 마코토", "Your Name"),
-            ("고질라 마이너스 원", 2023, "액션", 124, 8.0, "야마자키 타카시", "Godzilla Minus One"),
         ],
         "중국": [
             ("와호장룡", 2000, "액션", 120, 7.9, "이안", "Crouching Tiger Hidden Dragon"),
-            ("영웅", 2002, "드라마", 99, 7.9, "장이머우", "Hero 2002"),
             ("쿵푸허슬", 2004, "코미디", 99, 7.7, "주성치", "Kung Fu Hustle"),
         ],
         "대만": [
             ("말할 수 없는 비밀", 2007, "로맨스", 101, 7.5, "주걸륜", "Secret 2007"),
-            ("그 시절, 우리가 좋아했던 소녀", 2011, "드라마", 109, 7.6, "구파도", "You Are the Apple of My Eye"),
             ("메리 마이 데드 바디", 2023, "코미디", 130, 7.3, "청웨이하오", "Marry My Dead Body"),
         ],
     }
@@ -677,16 +665,10 @@ def 스타일적용(다크모드=True):
         .movie-card {{
             border-radius:22px;
             overflow:hidden;
-            margin-bottom:12px;
+            margin-bottom:8px;
             background:{card_bg};
             border:1px solid {border};
             box-shadow:0 12px 30px rgba(0,0,0,.18);
-            transition:transform .18s ease, box-shadow .18s ease;
-            cursor:pointer;
-        }}
-        .movie-card:hover {{
-            transform: translateY(-4px);
-            box-shadow:0 16px 36px rgba(0,0,0,.28);
         }}
         .poster-wrap {{
             position:relative;
@@ -745,7 +727,7 @@ def 스타일적용(다크모드=True):
             max-width:92%;
         }}
         .card-info {{
-            padding:14px 14px 12px 14px;
+            padding:14px 14px 8px 14px;
         }}
         .card-title {{
             font-size:1rem;
@@ -766,6 +748,11 @@ def 스타일적용(다크모드=True):
             color:{sub} !important;
             line-height:1.5;
             min-height:2.8em;
+            margin-bottom:8px;
+        }}
+        .small-btn-wrap {{
+            margin-top: 4px;
+            margin-bottom: 4px;
         }}
         .detail-panel {{
             background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78));
@@ -838,6 +825,43 @@ def 스타일적용(다크모드=True):
     )
 
 
+def 카드HTML생성(row, tmdb_api_key):
+    title = escape(str(row["영화명"]))
+    country = escape(str(row["국가"]))
+    genre = escape(str(row["장르"]))
+    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
+    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
+    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
+    one_liner = escape(str(row["한줄요약"]))
+    age_rating = escape(str(row["연령등급"]))
+    ott_text = escape(목록문자열(태그분리(row["OTT"]), 2))
+    poster = 포스터주소가져오기(row, tmdb_api_key)
+
+    hover_text = f"{genre} · {runtime} · ★ {rating}<br>{age_rating} · {ott_text}"
+
+    return f"""
+    <div class='movie-card'>
+        <div class='poster-wrap'>
+            <img src='{escape(poster, quote=True)}' class='poster-img' alt='{title} 포스터'>
+            <div class='poster-top-badges'>
+                <span class='poster-badge'>{genre}</span>
+                <span class='poster-badge'>★ {rating}</span>
+            </div>
+            <div class='poster-hover'>
+                <div class='poster-hover-box'>
+                    {hover_text}
+                </div>
+            </div>
+        </div>
+        <div class='card-info'>
+            <div class='card-title'>{title}</div>
+            <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
+            <div class='card-summary'>{one_liner}</div>
+        </div>
+    </div>
+    """
+
+
 @st.dialog("영화 상세 정보", width="large")
 def 영화상세팝업(row, tmdb_api_key):
     title = str(row["영화명"])
@@ -892,53 +916,73 @@ def 영화상세팝업(row, tmdb_api_key):
             st.success("저장되었습니다.")
 
 
-def 카드클릭UI(row, tmdb_api_key):
+def 카드UI(row, tmdb_api_key):
     st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
-    if st.button("포스터 더블클릭 대신 여기 클릭해도 열기", key=f"fallback_{row['영화명']}", use_container_width=True):
+    st.markdown("<div class='small-btn-wrap'>", unsafe_allow_html=True)
+    if st.button("상세보기", key=f"detail_{row['영화명']}", use_container_width=True):
         영화상세팝업(row, tmdb_api_key)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
-def 카드HTML생성(row, tmdb_api_key):
-    title = str(row["영화명"])
-    safe_title = escape(title)
-    encoded_title = requests.utils.quote(title)
-
+def 히어로HTML생성(row, tmdb_api_key):
+    title = escape(str(row["영화명"]))
     country = escape(str(row["국가"]))
     genre = escape(str(row["장르"]))
+    director = escape(str(row["감독"]))
     year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
     runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
     rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
-    one_liner = escape(str(row["한줄요약"]))
-    age_rating = escape(str(row["연령등급"]))
-    ott_text = escape(목록문자열(태그분리(row["OTT"]), 2))
+    audience = 숫자표시(row["관객수"])
+    gross = 금액표시(row["글로벌흥행액"])
     poster = 포스터주소가져오기(row, tmdb_api_key)
 
-    hover_text = f"{genre} · {runtime} · ★ {rating}<br>{age_rating} · {ott_text}"
+    chips = "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["감정태그"])[:3]])
+    chips += "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["특징태그"])[:3]])
 
     return f"""
-    <div class='movie-card'
-         ondblclick="window.location.search='?movie={encoded_title}'"
-         title='포스터 영역을 더블클릭하면 상세 정보가 열립니다'>
-        <div class='poster-wrap'>
-            <img src='{escape(poster, quote=True)}' class='poster-img' alt='{safe_title} 포스터'>
-            <div class='poster-top-badges'>
-                <span class='poster-badge'>{genre}</span>
-                <span class='poster-badge'>★ {rating}</span>
+    <div class='hero-wrap'>
+        <img src='{escape(poster, quote=True)}' class='hero-bg' alt='{title} 포스터'>
+        <div class='hero-overlay'></div>
+        <div class='hero-content'>
+            <div class='hero-badge'>오늘의 픽</div>
+            <div class='hero-title'>{title}</div>
+            <div class='hero-meta'>{country} · {genre} · {year} · {runtime} · 감독 {director}</div>
+            <div class='hero-desc'>{escape(str(row["짧은소개"]))}</div>
+            <div class='hero-desc' style='font-size:.95rem;'>{escape(str(row["한줄요약"]))}</div>
+            <div class='chip-row'>{chips}</div>
+            <div class='hero-stats'>
+                <div class='hero-stat'><div class='hero-stat-label'>평점</div><div class='hero-stat-value'>★ {rating}</div></div>
+                <div class='hero-stat'><div class='hero-stat-label'>관객수</div><div class='hero-stat-value'>{audience}</div></div>
+                <div class='hero-stat'><div class='hero-stat-label'>글로벌 흥행액</div><div class='hero-stat-value'>{gross}</div></div>
+                <div class='hero-stat'><div class='hero-stat-label'>연령등급</div><div class='hero-stat-value'>{escape(str(row["연령등급"]))}</div></div>
             </div>
-            <div class='poster-hover'>
-                <div class='poster-hover-box'>
-                    {hover_text}<br><br>
-                    <b>포스터 더블클릭으로 상세 보기</b>
-                </div>
-            </div>
-        </div>
-        <div class='card-info'>
-            <div class='card-title'>{safe_title}</div>
-            <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
-            <div class='card-summary'>{one_liner}</div>
         </div>
     </div>
     """
+
+
+def 세션초기화():
+    if "wishlist" not in st.session_state:
+        st.session_state["wishlist"] = []
+    if "watched" not in st.session_state:
+        st.session_state["watched"] = []
+    if "rewatch" not in st.session_state:
+        st.session_state["rewatch"] = []
+    if "user_rating" not in st.session_state:
+        st.session_state["user_rating"] = {}
+    if "user_review" not in st.session_state:
+        st.session_state["user_review"] = {}
+    if "현재페이지" not in st.session_state:
+        st.session_state["현재페이지"] = 1
+
+
+def 리스트토글(key, value):
+    arr = st.session_state[key]
+    if value in arr:
+        arr.remove(value)
+    else:
+        arr.append(value)
+    st.session_state[key] = arr
 
 
 def 메인():
@@ -1045,21 +1089,6 @@ def 메인():
     대표영화 = filtered.iloc[0]
     st.markdown(히어로HTML생성(대표영화, tmdb_api_key), unsafe_allow_html=True)
 
-    selected_from_query = None
-    try:
-        qp = st.query_params
-        if "movie" in qp:
-            selected_from_query = qp["movie"]
-            if isinstance(selected_from_query, list):
-                selected_from_query = selected_from_query[0]
-    except Exception:
-        selected_from_query = None
-
-    if selected_from_query:
-        matched = df[df["영화명"] == selected_from_query]
-        if len(matched) > 0:
-            영화상세팝업(matched.iloc[0], tmdb_api_key)
-
     전체페이지수 = max(1, math.ceil(len(filtered) / 페이지당개수))
     if st.session_state["현재페이지"] > 전체페이지수:
         st.session_state["현재페이지"] = 전체페이지수
@@ -1090,7 +1119,7 @@ def 메인():
         cols = st.columns(cols_per_row)
         for col, (_, row) in zip(cols, chunk.iterrows()):
             with col:
-                카드클릭UI(row, tmdb_api_key)
+                카드UI(row, tmdb_api_key)
 
     st.markdown("<div class='section-title'>추천 레일</div>", unsafe_allow_html=True)
     rec1, rec2, rec3 = st.columns(3)
