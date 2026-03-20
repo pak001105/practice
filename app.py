@@ -240,8 +240,6 @@ def 수상여부생성(영화명):
         "조커": "베니스국제영화제 황금사자상, 아카데미 주요 부문 수상",
         "라라랜드": "아카데미 다수 부문 수상",
         "킹스 스피치": "아카데미 작품상 포함 주요 부문 수상",
-        "보헤미안 랩소디": "아카데미 주요 부문 수상",
-        "1917": "골든글로브 작품상, 주요 시상식 수상",
         "센과 치히로의 행방불명": "아카데미 장편애니메이션상 수상",
         "어느 가족": "칸영화제 황금종려상 수상",
         "헤어질 결심": "칸영화제 감독상 수상",
@@ -684,6 +682,7 @@ def 스타일적용(다크모드=True):
             border:1px solid {border};
             box-shadow:0 12px 30px rgba(0,0,0,.18);
             transition:transform .18s ease, box-shadow .18s ease;
+            cursor:pointer;
         }}
         .movie-card:hover {{
             transform: translateY(-4px);
@@ -839,110 +838,6 @@ def 스타일적용(다크모드=True):
     )
 
 
-def 포스터주소_html(url):
-    return escape(url, quote=True)
-
-
-def 카드HTML생성(row, tmdb_api_key):
-    title = escape(str(row["영화명"]))
-    country = escape(str(row["국가"]))
-    genre = escape(str(row["장르"]))
-    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
-    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
-    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
-    one_liner = escape(str(row["한줄요약"]))
-    age_rating = escape(str(row["연령등급"]))
-    ott_text = escape(목록문자열(태그분리(row["OTT"]), 2))
-    poster = 포스터주소가져오기(row, tmdb_api_key)
-
-    hover_text = f"{genre} · {runtime} · ★ {rating}<br>{age_rating} · {ott_text}"
-
-    return f"""
-    <div class='movie-card'>
-        <div class='poster-wrap'>
-            <img src='{포스터주소_html(poster)}' class='poster-img' alt='{title} 포스터'>
-            <div class='poster-top-badges'>
-                <span class='poster-badge'>{genre}</span>
-                <span class='poster-badge'>★ {rating}</span>
-            </div>
-            <div class='poster-hover'>
-                <div class='poster-hover-box'>
-                    {hover_text}
-                </div>
-            </div>
-        </div>
-        <div class='card-info'>
-            <div class='card-title'>{title}</div>
-            <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
-            <div class='card-summary'>{one_liner}</div>
-        </div>
-    </div>
-    """
-
-
-def 히어로HTML생성(row, tmdb_api_key):
-    title = escape(str(row["영화명"]))
-    country = escape(str(row["국가"]))
-    genre = escape(str(row["장르"]))
-    director = escape(str(row["감독"]))
-    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
-    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
-    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
-    audience = 숫자표시(row["관객수"])
-    gross = 금액표시(row["글로벌흥행액"])
-    poster = 포스터주소가져오기(row, tmdb_api_key)
-
-    chips = "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["감정태그"])[:3]])
-    chips += "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["특징태그"])[:3]])
-
-    return f"""
-    <div class='hero-wrap'>
-        <img src='{포스터주소_html(poster)}' class='hero-bg' alt='{title} 포스터'>
-        <div class='hero-overlay'></div>
-        <div class='hero-content'>
-            <div class='hero-badge'>오늘의 픽</div>
-            <div class='hero-title'>{title}</div>
-            <div class='hero-meta'>{country} · {genre} · {year} · {runtime} · 감독 {director}</div>
-            <div class='hero-desc'>{escape(str(row["짧은소개"]))}</div>
-            <div class='hero-desc' style='font-size:.95rem;'>{escape(str(row["한줄요약"]))}</div>
-            <div class='chip-row'>{chips}</div>
-            <div class='hero-stats'>
-                <div class='hero-stat'><div class='hero-stat-label'>평점</div><div class='hero-stat-value'>★ {rating}</div></div>
-                <div class='hero-stat'><div class='hero-stat-label'>관객수</div><div class='hero-stat-value'>{audience}</div></div>
-                <div class='hero-stat'><div class='hero-stat-label'>글로벌 흥행액</div><div class='hero-stat-value'>{gross}</div></div>
-                <div class='hero-stat'><div class='hero-stat-label'>연령등급</div><div class='hero-stat-value'>{escape(str(row["연령등급"]))}</div></div>
-            </div>
-        </div>
-    </div>
-    """
-
-
-def 세션초기화():
-    if "wishlist" not in st.session_state:
-        st.session_state["wishlist"] = []
-    if "watched" not in st.session_state:
-        st.session_state["watched"] = []
-    if "rewatch" not in st.session_state:
-        st.session_state["rewatch"] = []
-    if "user_rating" not in st.session_state:
-        st.session_state["user_rating"] = {}
-    if "user_review" not in st.session_state:
-        st.session_state["user_review"] = {}
-    if "현재페이지" not in st.session_state:
-        st.session_state["현재페이지"] = 1
-    if "selected_movie" not in st.session_state:
-        st.session_state["selected_movie"] = None
-
-
-def 리스트토글(key, value):
-    arr = st.session_state[key]
-    if value in arr:
-        arr.remove(value)
-    else:
-        arr.append(value)
-    st.session_state[key] = arr
-
-
 @st.dialog("영화 상세 정보", width="large")
 def 영화상세팝업(row, tmdb_api_key):
     title = str(row["영화명"])
@@ -995,6 +890,55 @@ def 영화상세팝업(row, tmdb_api_key):
             st.session_state["user_rating"][title] = user_score
             st.session_state["user_review"][title] = user_review
             st.success("저장되었습니다.")
+
+
+def 카드클릭UI(row, tmdb_api_key):
+    st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
+    if st.button("포스터 더블클릭 대신 여기 클릭해도 열기", key=f"fallback_{row['영화명']}", use_container_width=True):
+        영화상세팝업(row, tmdb_api_key)
+
+
+def 카드HTML생성(row, tmdb_api_key):
+    title = str(row["영화명"])
+    safe_title = escape(title)
+    encoded_title = requests.utils.quote(title)
+
+    country = escape(str(row["국가"]))
+    genre = escape(str(row["장르"]))
+    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
+    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
+    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
+    one_liner = escape(str(row["한줄요약"]))
+    age_rating = escape(str(row["연령등급"]))
+    ott_text = escape(목록문자열(태그분리(row["OTT"]), 2))
+    poster = 포스터주소가져오기(row, tmdb_api_key)
+
+    hover_text = f"{genre} · {runtime} · ★ {rating}<br>{age_rating} · {ott_text}"
+
+    return f"""
+    <div class='movie-card'
+         ondblclick="window.location.search='?movie={encoded_title}'"
+         title='포스터 영역을 더블클릭하면 상세 정보가 열립니다'>
+        <div class='poster-wrap'>
+            <img src='{escape(poster, quote=True)}' class='poster-img' alt='{safe_title} 포스터'>
+            <div class='poster-top-badges'>
+                <span class='poster-badge'>{genre}</span>
+                <span class='poster-badge'>★ {rating}</span>
+            </div>
+            <div class='poster-hover'>
+                <div class='poster-hover-box'>
+                    {hover_text}<br><br>
+                    <b>포스터 더블클릭으로 상세 보기</b>
+                </div>
+            </div>
+        </div>
+        <div class='card-info'>
+            <div class='card-title'>{safe_title}</div>
+            <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
+            <div class='card-summary'>{one_liner}</div>
+        </div>
+    </div>
+    """
 
 
 def 메인():
@@ -1101,6 +1045,21 @@ def 메인():
     대표영화 = filtered.iloc[0]
     st.markdown(히어로HTML생성(대표영화, tmdb_api_key), unsafe_allow_html=True)
 
+    selected_from_query = None
+    try:
+        qp = st.query_params
+        if "movie" in qp:
+            selected_from_query = qp["movie"]
+            if isinstance(selected_from_query, list):
+                selected_from_query = selected_from_query[0]
+    except Exception:
+        selected_from_query = None
+
+    if selected_from_query:
+        matched = df[df["영화명"] == selected_from_query]
+        if len(matched) > 0:
+            영화상세팝업(matched.iloc[0], tmdb_api_key)
+
     전체페이지수 = max(1, math.ceil(len(filtered) / 페이지당개수))
     if st.session_state["현재페이지"] > 전체페이지수:
         st.session_state["현재페이지"] = 전체페이지수
@@ -1131,10 +1090,7 @@ def 메인():
         cols = st.columns(cols_per_row)
         for col, (_, row) in zip(cols, chunk.iterrows()):
             with col:
-                st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
-                if st.button("상세 보기", key=f"detail_{row['영화명']}", use_container_width=True):
-                    st.session_state["selected_movie"] = row["영화명"]
-                    영화상세팝업(row, tmdb_api_key)
+                카드클릭UI(row, tmdb_api_key)
 
     st.markdown("<div class='section-title'>추천 레일</div>", unsafe_allow_html=True)
     rec1, rec2, rec3 = st.columns(3)
