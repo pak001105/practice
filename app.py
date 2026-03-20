@@ -2,7 +2,7 @@ import math
 import base64
 from pathlib import Path
 from html import escape
-from typing import Optional
+from typing import Optional, List, Dict
 
 import pandas as pd
 import requests
@@ -24,15 +24,24 @@ COLUMN_ALIASES = {
     "시대구분": ["시대구분", "decade", "era"],
     "국가": ["국가", "country", "nation"],
     "장르": ["장르", "genre"],
+    "세부장르": ["세부장르", "subgenre"],
     "상영시간": ["상영시간", "runtime_min", "runtime", "상영시간(분)"],
     "관객수": ["관객수", "audience", "audience_count"],
     "글로벌흥행액": ["글로벌흥행액", "worldwide_gross", "global_box_office"],
     "평점": ["평점", "rating", "score"],
     "감독": ["감독", "director"],
-    "감정태그": ["감정태그", "emotion_tags", "mood_tags", "감정 태그"],
-    "상황태그": ["상황태그", "situation_tags", "context_tags", "상황 태그"],
-    "특징태그": ["특징태그", "feature_tags", "special_tags", "특징", "특징 태그"],
+    "출연진": ["출연진", "cast"],
+    "연령등급": ["연령등급", "age_rating"],
+    "한줄요약": ["한줄요약", "summary_short"],
+    "짧은소개": ["짧은소개", "short_description"],
+    "줄거리": ["줄거리", "synopsis"],
+    "감정태그": ["감정태그", "emotion_tags", "mood_tags"],
+    "상황태그": ["상황태그", "situation_tags", "context_tags"],
+    "특징태그": ["특징태그", "feature_tags", "special_tags"],
     "해시태그": ["해시태그", "hashtags"],
+    "시리즈": ["시리즈", "series_name"],
+    "OTT": ["OTT", "ott_platforms"],
+    "예고편URL": ["예고편URL", "trailer_url"],
     "포스터URL": ["포스터URL", "poster_url", "poster", "poster_image_url"],
     "포스터검색어": ["포스터검색어", "poster_query", "poster_search_query"],
 }
@@ -95,18 +104,183 @@ def 금액표시(value):
         return "-"
 
 
-def 장르태그만들기(장르):
+def 목록문자열(items: List[str], limit: Optional[int] = None):
+    if not items:
+        return "-"
+    if limit is not None:
+        items = items[:limit]
+    return ", ".join(items)
+
+
+def 러닝타임구간(분):
+    if pd.isna(분):
+        return "미상"
+    분 = int(분)
+    if 분 < 100:
+        return "100분 미만"
+    if 분 < 120:
+        return "100~119분"
+    if 분 < 140:
+        return "120~139분"
+    return "140분 이상"
+
+
+def 장르프로필(장르):
     mapping = {
-        "액션": ("전율,쾌감,몰입", "친구와,주말,액션좋아할때", "블록버스터,속도감,카타르시스", "액션,몰입,대작"),
-        "드라마": ("감동,여운,몰입", "혼자,조용한밤,깊게보고싶을때", "인생,서사,감정선", "드라마,감동,여운"),
-        "스릴러": ("긴장,불안,몰입", "밤,혼자,반전좋아할때", "반전,심리,서스펜스", "스릴러,반전,몰입"),
-        "로맨스": ("설렘,감성,여운", "연인과,밤,감성적인날", "사랑,청춘,관계", "로맨스,감성,설렘"),
-        "애니메이션": ("따뜻함,힐링,감동", "가족과,주말오후,가볍게", "성장,가족,모험", "애니메이션,힐링,가족"),
-        "판타지": ("신비로움,몰입,경이로움", "주말,혼자,세계관좋아할때", "세계관,마법,모험", "판타지,모험,세계관"),
-        "코미디": ("유쾌함,웃김,가벼움", "친구와,주말,웃고싶을때", "웃음,기분전환,템포", "코미디,웃김,가볍게"),
-        "SF": ("경이로움,몰입,사색", "혼자,주말밤,생각하고싶을때", "우주,미래,설정", "SF,우주,세계관"),
+        "액션": {
+            "감정": "전율,쾌감,몰입",
+            "상황": "친구와,주말,액션좋아할때",
+            "특징": "블록버스터,속도감,카타르시스",
+            "해시태그": "액션,몰입,대작",
+            "세부장르": "범죄액션",
+            "연령등급": "15세 이상",
+            "ott": "넷플릭스,디즈니플러스,웨이브",
+        },
+        "드라마": {
+            "감정": "감동,여운,몰입",
+            "상황": "혼자,조용한밤,깊게보고싶을때",
+            "특징": "인생,서사,감정선",
+            "해시태그": "드라마,감동,여운",
+            "세부장르": "휴먼드라마",
+            "연령등급": "12세 이상",
+            "ott": "넷플릭스,왓챠,웨이브",
+        },
+        "스릴러": {
+            "감정": "긴장,불안,몰입",
+            "상황": "밤,혼자,반전좋아할때",
+            "특징": "반전,심리,서스펜스",
+            "해시태그": "스릴러,반전,몰입",
+            "세부장르": "심리스릴러",
+            "연령등급": "15세 이상",
+            "ott": "넷플릭스,티빙,왓챠",
+        },
+        "로맨스": {
+            "감정": "설렘,감성,여운",
+            "상황": "연인과,밤,감성적인날",
+            "특징": "사랑,청춘,관계",
+            "해시태그": "로맨스,감성,설렘",
+            "세부장르": "감성로맨스",
+            "연령등급": "12세 이상",
+            "ott": "넷플릭스,디즈니플러스,쿠팡플레이",
+        },
+        "애니메이션": {
+            "감정": "따뜻함,힐링,감동",
+            "상황": "가족과,주말오후,가볍게",
+            "특징": "성장,가족,모험",
+            "해시태그": "애니메이션,힐링,가족",
+            "세부장르": "가족애니메이션",
+            "연령등급": "전체관람가",
+            "ott": "디즈니플러스,넷플릭스,웨이브",
+        },
+        "판타지": {
+            "감정": "신비로움,몰입,경이로움",
+            "상황": "주말,혼자,세계관좋아할때",
+            "특징": "세계관,마법,모험",
+            "해시태그": "판타지,모험,세계관",
+            "세부장르": "판타지어드벤처",
+            "연령등급": "12세 이상",
+            "ott": "디즈니플러스,넷플릭스,티빙",
+        },
+        "코미디": {
+            "감정": "유쾌함,웃김,가벼움",
+            "상황": "친구와,주말,웃고싶을때",
+            "특징": "웃음,기분전환,템포",
+            "해시태그": "코미디,웃김,가볍게",
+            "세부장르": "버디코미디",
+            "연령등급": "12세 이상",
+            "ott": "넷플릭스,티빙,쿠팡플레이",
+        },
+        "SF": {
+            "감정": "경이로움,몰입,사색",
+            "상황": "혼자,주말밤,생각하고싶을때",
+            "특징": "우주,미래,설정",
+            "해시태그": "SF,우주,세계관",
+            "세부장르": "미래SF",
+            "연령등급": "12세 이상",
+            "ott": "넷플릭스,디즈니플러스,애플TV+",
+        },
     }
-    return mapping.get(장르, ("몰입,감상", "혼자,주말", "영화,스토리", "영화,추천"))
+    return mapping.get(장르, {
+        "감정": "몰입,감상",
+        "상황": "혼자,주말",
+        "특징": "영화,스토리",
+        "해시태그": "영화,추천",
+        "세부장르": "일반",
+        "연령등급": "12세 이상",
+        "ott": "넷플릭스",
+    })
+
+
+def 시리즈추출(영화명):
+    rules = [
+        ("어벤져스", "어벤져스 시리즈"),
+        ("범죄도시", "범죄도시 시리즈"),
+        ("신과함께", "신과함께 시리즈"),
+        ("겨울왕국", "겨울왕국 시리즈"),
+        ("아바타", "아바타 시리즈"),
+        ("해리 포터", "해리 포터 시리즈"),
+        ("킹스맨", "킹스맨 시리즈"),
+        ("007", "007 시리즈"),
+        ("적벽대전", "삼국지 시리즈"),
+    ]
+    for key, value in rules:
+        if key in 영화명:
+            return value
+    return ""
+
+
+def 출연진생성(국가, 장르, idx):
+    pools = {
+        "한국": ["송강호", "황정민", "이병헌", "전지현", "정우성", "박정민", "마동석", "김혜수"],
+        "미국": ["레오나르도 디카프리오", "톰 크루즈", "로버트 다우니 주니어", "엠마 스톤", "라이언 고슬링", "크리스 에반스", "제시카 차스테인", "스칼릿 조핸슨"],
+        "영국": ["콜린 퍼스", "에디 레드메인", "휴 그랜트", "케이라 나이틀리", "대니얼 크레이그", "헨리 카빌", "톰 하디", "엠마 톰슨"],
+        "스페인": ["하비에르 바르뎀", "페넬로페 크루즈", "벨렌 루에다", "마리오 카사스", "에두아르드 페르난데스"],
+        "인도": ["아미르 칸", "샤룩 칸", "란비르 카푸르", "디피카 파두콘", "알리아 바트", "프리얀카 초프라"],
+        "일본": ["기무라 타쿠야", "히로세 스즈", "아라가키 유이", "야마자키 켄토", "나가사와 마사미"],
+        "중국": ["이연걸", "장쯔이", "공리", "주윤발", "주성치", "류이페이"],
+        "대만": ["계륜미", "천이한", "진의함", "왕대륙", "가진동", "주걸륜"],
+    }
+    base = pools.get(국가, ["배우A", "배우B", "배우C"])
+    a = base[idx % len(base)]
+    b = base[(idx + 2) % len(base)]
+    c = base[(idx + 4) % len(base)]
+    if 장르 == "애니메이션":
+        return f"{a}, {b} (성우), {c} (성우)"
+    return f"{a}, {b}, {c}"
+
+
+def 한줄요약생성(장르, 특징태그):
+    특징 = 태그분리(특징태그)
+    핵심 = 특징[0] if 특징 else "몰입감"
+    mapping = {
+        "액션": f"{핵심}이 강한 통쾌한 액션 엔터테이너",
+        "드라마": f"{핵심}을 중심으로 감정을 쌓아가는 드라마",
+        "스릴러": f"{핵심}이 살아 있는 몰입형 스릴러",
+        "로맨스": f"{핵심}과 감성이 어우러진 로맨스",
+        "애니메이션": f"{핵심}과 따뜻함이 어우러진 가족 애니메이션",
+        "판타지": f"{핵심}이 돋보이는 판타지 모험극",
+        "코미디": f"{핵심}으로 기분 좋게 웃을 수 있는 코미디",
+        "SF": f"{핵심}과 세계관이 매력적인 SF 영화",
+    }
+    return mapping.get(장르, "지금 보기 좋은 추천 영화")
+
+
+def 짧은소개생성(영화명, 국가, 장르):
+    return f"{국가}에서 화제가 되었던 {장르} 영화로, {영화명} 특유의 분위기와 몰입감이 돋보이는 작품입니다."
+
+
+def 줄거리생성(영화명, 장르, 특징태그):
+    특징 = 목록문자열(태그분리(특징태그), 3)
+    return (
+        f"{영화명}은(는) {장르} 장르의 매력을 중심으로 전개되는 작품입니다. "
+        f"이 영화는 {특징} 요소를 바탕으로 관객을 몰입시키며, "
+        f"인물의 선택과 감정의 흐름이 또렷하게 살아 있어 끝까지 집중해서 보기 좋습니다."
+    )
+
+
+def 예고편URL생성(query):
+    q = str(query).replace(" ", "+")
+    return f"https://www.youtube.com/results?search_query={q}+official+trailer"
 
 
 def 기본데이터생성():
@@ -127,16 +301,21 @@ def 기본데이터생성():
             ("겨울왕국 2", 2019, "애니메이션", 103, 6.8, "크리스 벅, 제니퍼 리", "Frozen II"),
             ("인사이드 아웃", 2015, "애니메이션", 95, 8.1, "피트 닥터", "Inside Out"),
             ("토이 스토리 3", 2010, "애니메이션", 103, 8.3, "리 언크리치", "Toy Story 3"),
+            ("포레스트 검프", 1994, "드라마", 142, 8.8, "로버트 저메키스", "Forrest Gump"),
+            ("탑건: 매버릭", 2022, "액션", 130, 8.3, "조셉 코신스키", "Top Gun Maverick"),
+            ("겟 아웃", 2017, "스릴러", 104, 7.7, "조던 필", "Get Out"),
         ],
         "한국": [
             ("명량", 2014, "액션", 128, 7.1, "김한민", "The Admiral Roaring Currents"),
             ("극한직업", 2019, "코미디", 111, 7.1, "이병헌", "Extreme Job"),
             ("신과함께-죄와 벌", 2017, "판타지", 139, 7.2, "김용화", "Along with the Gods The Two Worlds"),
+            ("신과함께-인과 연", 2018, "판타지", 141, 7.1, "김용화", "Along with the Gods The Last 49 Days"),
             ("국제시장", 2014, "드라마", 126, 7.8, "윤제균", "Ode to My Father"),
             ("베테랑", 2015, "액션", 123, 7.0, "류승완", "Veteran 2015"),
             ("서울의 봄", 2023, "드라마", 141, 8.3, "김성수", "12.12 The Day"),
             ("암살", 2015, "액션", 139, 7.3, "최동훈", "Assassination 2015"),
             ("범죄도시 2", 2022, "액션", 106, 7.2, "이상용", "The Roundup"),
+            ("범죄도시 3", 2023, "액션", 105, 6.6, "이상용", "The Roundup No Way Out"),
             ("7번방의 선물", 2013, "코미디", 127, 8.2, "이환경", "Miracle in Cell No 7"),
             ("도둑들", 2012, "액션", 135, 6.8, "최동훈", "The Thieves"),
             ("변호인", 2013, "드라마", 127, 7.7, "양우석", "The Attorney"),
@@ -150,20 +329,19 @@ def 기본데이터생성():
             ("헤어질 결심", 2022, "로맨스", 138, 7.3, "박찬욱", "Decision to Leave"),
             ("과속스캔들", 2008, "코미디", 108, 7.2, "강형철", "Scandal Makers"),
             ("광해, 왕이 된 남자", 2012, "드라마", 131, 7.8, "추창민", "Masquerade"),
-            ("변신", 2019, "스릴러", 113, 6.0, "김홍선", "Metamorphosis"),
             ("엑시트", 2019, "액션", 103, 7.0, "이상근", "Exit"),
             ("내부자들", 2015, "드라마", 130, 7.8, "우민호", "Inside Men"),
             ("1987", 2017, "드라마", 129, 7.8, "장준환", "1987 When the Day Comes"),
             ("건축학개론", 2012, "로맨스", 118, 7.2, "이용주", "Architecture 101"),
             ("늑대소년", 2012, "판타지", 125, 7.2, "조성희", "A Werewolf Boy"),
             ("한산: 용의 출현", 2022, "액션", 129, 6.6, "김한민", "Hansan Rising Dragon"),
-            ("범죄도시 3", 2023, "액션", 105, 6.6, "이상용", "The Roundup No Way Out"),
             ("검사외전", 2016, "코미디", 126, 6.7, "이일형", "A Violent Prosecutor"),
-            ("신과함께-인과 연", 2018, "판타지", 141, 7.1, "김용화", "Along with the Gods The Last 49 Days"),
             ("말아톤", 2005, "드라마", 117, 7.7, "정윤철", "Marathon"),
             ("써니", 2011, "코미디", 124, 7.8, "강형철", "Sunny"),
             ("부당거래", 2010, "스릴러", 119, 7.2, "류승완", "The Unjust"),
             ("마더", 2009, "스릴러", 129, 7.8, "봉준호", "Mother 2009"),
+            ("타짜", 2006, "드라마", 139, 7.2, "최동훈", "Tazza The High Rollers"),
+            ("추격자", 2008, "스릴러", 125, 7.8, "나홍진", "The Chaser"),
         ],
         "영국": [
             ("007 스카이폴", 2012, "액션", 143, 7.8, "샘 멘데스", "Skyfall"),
@@ -243,21 +421,30 @@ def 기본데이터생성():
     idx = 1
     for 국가, movies in movie_map.items():
         for 영화명, 개봉연도, 장르, 상영시간, 평점, 감독, 포스터검색어 in movies:
-            감정태그, 상황태그, 특징태그, 해시태그 = 장르태그만들기(장르)
+            profile = 장르프로필(장르)
             rows.append({
                 "영화명": 영화명,
                 "개봉연도": 개봉연도,
                 "국가": 국가,
                 "장르": 장르,
+                "세부장르": profile["세부장르"],
                 "상영시간": 상영시간,
                 "관객수": 500000 + idx * 9321,
                 "글로벌흥행액": 25000000 + idx * 1750000,
                 "평점": 평점,
                 "감독": 감독,
-                "감정태그": 감정태그,
-                "상황태그": 상황태그,
-                "특징태그": 특징태그,
-                "해시태그": 해시태그,
+                "출연진": 출연진생성(국가, 장르, idx),
+                "연령등급": profile["연령등급"],
+                "한줄요약": 한줄요약생성(장르, profile["특징"]),
+                "짧은소개": 짧은소개생성(영화명, 국가, 장르),
+                "줄거리": 줄거리생성(영화명, 장르, profile["특징"]),
+                "감정태그": profile["감정"],
+                "상황태그": profile["상황"],
+                "특징태그": profile["특징"],
+                "해시태그": profile["해시태그"],
+                "시리즈": 시리즈추출(영화명),
+                "OTT": profile["ott"],
+                "예고편URL": 예고편URL생성(포스터검색어),
                 "포스터URL": "",
                 "포스터검색어": 포스터검색어,
             })
@@ -304,9 +491,9 @@ def 데이터불러오기(uploaded_file=None, uploaded_name=None):
     out = pd.DataFrame(normalized)
 
     문자컬럼 = [
-        "영화명", "시대구분", "국가", "장르", "감독",
-        "감정태그", "상황태그", "특징태그", "해시태그",
-        "포스터URL", "포스터검색어"
+        "영화명", "시대구분", "국가", "장르", "세부장르", "감독", "출연진", "연령등급",
+        "한줄요약", "짧은소개", "줄거리", "감정태그", "상황태그", "특징태그",
+        "해시태그", "시리즈", "OTT", "예고편URL", "포스터URL", "포스터검색어"
     ]
     for col in 문자컬럼:
         out[col] = out[col].fillna("").astype(str).str.strip()
@@ -471,7 +658,7 @@ def 스타일적용(다크모드=True):
             position: relative;
             z-index: 2;
             padding: 42px;
-            max-width: 700px;
+            max-width: 760px;
         }}
         .hero-badge {{
             display: inline-block;
@@ -500,13 +687,13 @@ def 스타일적용(다크모드=True):
             font-size: 1rem;
             color: #d4dbe5;
             line-height: 1.7;
-            margin-bottom: 22px;
+            margin-bottom: 16px;
         }}
         .chip-row {{
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 22px;
+            margin-bottom: 20px;
         }}
         .chip {{
             padding: 8px 14px;
@@ -678,6 +865,11 @@ def 스타일적용(다크모드=True):
         [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
             color: {main_text} !important;
         }}
+        .action-btn-note {{
+            font-size: .82rem;
+            color: {sub};
+            margin-top: 4px;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -695,9 +887,7 @@ def 카드HTML생성(row, tmdb_api_key):
     year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
     runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
     rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
-    emotions = ", ".join(태그분리(row["감정태그"])) or "-"
-    situations = ", ".join(태그분리(row["상황태그"])) or "-"
-    features = ", ".join(태그분리(row["특징태그"])) or "-"
+    one_liner = escape(str(row["한줄요약"]))
     poster = 포스터주소가져오기(row, tmdb_api_key)
 
     return f"""
@@ -708,16 +898,16 @@ def 카드HTML생성(row, tmdb_api_key):
             <div class='card-bottom'>
                 <div class='card-title'>{title}</div>
                 <div class='card-sub'>{country} · {genre} · {year} · {runtime} · ★ {rating}</div>
+                <div class='card-sub' style='margin-top:6px;'>{one_liner}</div>
             </div>
             <div class='card-hover'>
                 <div><b>{title}</b> ({year})</div>
                 <div>국가: {country}</div>
                 <div>장르: {genre}</div>
                 <div>상영시간: {runtime}</div>
-                <div>평점: {rating}</div>
-                <div>감정 태그: {escape(emotions)}</div>
-                <div>상황 태그: {escape(situations)}</div>
-                <div>특징: {escape(features)}</div>
+                <div>연령등급: {escape(str(row['연령등급']))}</div>
+                <div>OTT: {escape(str(row['OTT']))}</div>
+                <div>감독: {escape(str(row['감독']))}</div>
             </div>
         </div>
     </div>
@@ -736,8 +926,8 @@ def 히어로HTML생성(row, tmdb_api_key):
     gross = 금액표시(row["글로벌흥행액"])
     poster = 포스터주소가져오기(row, tmdb_api_key)
 
-    감정칩 = "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["감정태그"])[:3]])
-    특징칩 = "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["특징태그"])[:3]])
+    chips = "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["감정태그"])[:3]])
+    chips += "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(row["특징태그"])[:3]])
 
     return f"""
     <div class='hero-wrap'>
@@ -747,11 +937,9 @@ def 히어로HTML생성(row, tmdb_api_key):
             <div class='hero-badge'>오늘의 픽</div>
             <div class='hero-title'>{title}</div>
             <div class='hero-meta'>{country} · {genre} · {year} · {runtime} · 감독 {director}</div>
-            <div class='hero-desc'>
-                지금 분위기에 가장 잘 어울리는 작품으로 보여드리는 추천 카드입니다.
-                감정 태그와 상황 태그, 장르 기반 추천이 함께 연결됩니다.
-            </div>
-            <div class='chip-row'>{감정칩}{특징칩}</div>
+            <div class='hero-desc'>{escape(str(row["짧은소개"]))}</div>
+            <div class='hero-desc' style='font-size:.95rem;'>{escape(str(row["한줄요약"]))}</div>
+            <div class='chip-row'>{chips}</div>
             <div class='hero-stats'>
                 <div class='hero-stat'>
                     <div class='hero-stat-label'>평점</div>
@@ -765,13 +953,122 @@ def 히어로HTML생성(row, tmdb_api_key):
                     <div class='hero-stat-label'>글로벌 흥행액</div>
                     <div class='hero-stat-value'>{gross}</div>
                 </div>
+                <div class='hero-stat'>
+                    <div class='hero-stat-label'>연령등급</div>
+                    <div class='hero-stat-value'>{escape(str(row["연령등급"]))}</div>
+                </div>
             </div>
         </div>
     </div>
     """
 
 
+def 필터링(df):
+    with st.sidebar:
+        st.subheader("필터")
+        선택국가 = st.multiselect("국가", [x for x in 사용가능국가 if x in df["국가"].unique().tolist()])
+        선택장르 = st.multiselect("장르", sorted(df["장르"].dropna().unique().tolist()))
+        선택세부장르 = st.multiselect("세부장르", sorted(df["세부장르"].dropna().unique().tolist()))
+        선택시대 = st.multiselect("시대", [x for x in 시대순서 if x in df["시대구분"].unique().tolist()])
+        선택감정 = st.multiselect("기분 태그", sorted({tag for text in df["감정태그"] for tag in 태그분리(text)}))
+        선택상황 = st.multiselect("상황 태그", sorted({tag for text in df["상황태그"] for tag in 태그분리(text)}))
+        선택연령등급 = st.multiselect("연령등급", sorted(df["연령등급"].dropna().unique().tolist()))
+        선택OTT = st.multiselect("OTT", sorted({tag for text in df["OTT"] for tag in 태그분리(text)}))
+        러닝타임옵션 = st.multiselect("러닝타임", ["100분 미만", "100~119분", "120~139분", "140분 이상"])
+        해시태그검색 = st.text_input("해시태그 검색", placeholder="#반전, #힐링")
+        일반검색 = st.text_input("영화명 / 감독 / 배우 / 특징 검색")
+        정렬기준 = st.selectbox(
+            "정렬",
+            ["평점 높은 순", "최신순", "관객수 높은 순", "영화명순", "짧은 러닝타임순", "감정 태그 일치순"]
+        )
+        페이지당개수 = st.selectbox("페이지당 카드 수", [8, 10, 12, 15, 20], index=2)
+
+    filtered = df.copy()
+
+    if 선택국가:
+        filtered = filtered[filtered["국가"].isin(선택국가)]
+    if 선택장르:
+        filtered = filtered[filtered["장르"].isin(선택장르)]
+    if 선택세부장르:
+        filtered = filtered[filtered["세부장르"].isin(선택세부장르)]
+    if 선택시대:
+        filtered = filtered[filtered["시대구분"].isin(선택시대)]
+    if 선택감정:
+        filtered = filtered[filtered["감정태그"].apply(lambda x: 모든태그포함여부(x, 선택감정))]
+    if 선택상황:
+        filtered = filtered[filtered["상황태그"].apply(lambda x: 모든태그포함여부(x, 선택상황))]
+    if 선택연령등급:
+        filtered = filtered[filtered["연령등급"].isin(선택연령등급)]
+    if 선택OTT:
+        filtered = filtered[filtered["OTT"].apply(lambda x: all(t in 태그분리(x) for t in 선택OTT))]
+    if 러닝타임옵션:
+        filtered = filtered[filtered["상영시간"].apply(lambda x: 러닝타임구간(x) in 러닝타임옵션)]
+    if 해시태그검색.strip():
+        query_tags = [t.lstrip("#") for t in 태그분리(해시태그검색.replace(" ", ","))]
+        filtered = filtered[
+            filtered["해시태그"].apply(
+                lambda x: any(q.lower() in str(x).lower().replace("#", "") for q in query_tags)
+            )
+        ]
+    if 일반검색.strip():
+        q = 일반검색.lower()
+        filtered = filtered[
+            filtered["영화명"].str.lower().str.contains(q, na=False)
+            | filtered["감독"].str.lower().str.contains(q, na=False)
+            | filtered["출연진"].str.lower().str.contains(q, na=False)
+            | filtered["특징태그"].str.lower().str.contains(q, na=False)
+            | filtered["줄거리"].str.lower().str.contains(q, na=False)
+        ]
+
+    if 정렬기준 == "평점 높은 순":
+        filtered = filtered.sort_values(["평점", "개봉연도"], ascending=[False, False], na_position="last")
+    elif 정렬기준 == "최신순":
+        filtered = filtered.sort_values(["개봉연도", "평점"], ascending=[False, False], na_position="last")
+    elif 정렬기준 == "관객수 높은 순":
+        filtered = filtered.sort_values(["관객수", "평점"], ascending=[False, False], na_position="last")
+    elif 정렬기준 == "짧은 러닝타임순":
+        filtered = filtered.sort_values(["상영시간", "평점"], ascending=[True, False], na_position="last")
+    elif 정렬기준 == "감정 태그 일치순":
+        filtered["감정일치수"] = filtered["감정태그"].apply(lambda x: len(set(태그분리(x)).intersection(set(선택감정))))
+        filtered = filtered.sort_values(["감정일치수", "평점"], ascending=[False, False], na_position="last")
+        filtered = filtered.drop(columns=["감정일치수"], errors="ignore")
+    else:
+        filtered = filtered.sort_values("영화명", ascending=True)
+
+    return filtered, 페이지당개수
+
+
+def 세션초기화():
+    defaults = {
+        "wishlist": set(),
+        "watched": set(),
+        "rewatch": set(),
+        "user_rating": {},
+        "user_review": {},
+        "현재페이지": 1,
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+
+def 추천섹션(title, data, tmdb_api_key, cols_per_row=5, max_items=10):
+    st.markdown(f"<div class='section-title'>{title}</div>", unsafe_allow_html=True)
+    data = data.head(max_items)
+    if len(data) == 0:
+        st.info("표시할 영화가 없습니다.")
+        return
+    for start in range(0, len(data), cols_per_row):
+        chunk = data.iloc[start:start + cols_per_row]
+        cols = st.columns(cols_per_row)
+        for col, (_, row) in zip(cols, chunk.iterrows()):
+            with col:
+                st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
+
+
 def 메인():
+    세션초기화()
+
     with st.sidebar:
         st.subheader("설정")
         다크모드 = st.toggle("다크모드", value=True)
@@ -780,7 +1077,7 @@ def 메인():
     스타일적용(다크모드)
 
     st.title("🎬 무드픽")
-    st.caption("기분, 상황, 해시태그, 국가, 장르, 시대별로 영화를 탐색하고 지금 분위기에 맞는 작품을 골라보세요.")
+    st.caption("영화를 찾는 것보다, 지금의 분위기에 맞는 작품을 고르기 쉽게 만들어주는 탐색형 추천 서비스")
 
     tmdb_api_key = None
     if "TMDB_API_KEY" in st.secrets:
@@ -806,67 +1103,13 @@ def 메인():
         st.error(f"데이터를 불러오지 못했습니다: {e}")
         st.stop()
 
-    국가목록 = [x for x in 사용가능국가 if x in df["국가"].unique().tolist()]
-    장르목록 = sorted(df["장르"].dropna().unique().tolist())
-    시대목록 = [x for x in 시대순서 if x in df["시대구분"].unique().tolist()]
-    감정목록 = sorted({tag for text in df["감정태그"] for tag in 태그분리(text)})
-    상황목록 = sorted({tag for text in df["상황태그"] for tag in 태그분리(text)})
+    filtered, 페이지당개수 = 필터링(df)
 
-    with st.sidebar:
-        st.subheader("필터")
-        선택국가 = st.multiselect("국가", 국가목록)
-        선택장르 = st.multiselect("장르", 장르목록)
-        선택시대 = st.multiselect("시대", 시대목록)
-        선택감정 = st.multiselect("기분 태그", 감정목록)
-        선택상황 = st.multiselect("상황 태그", 상황목록)
-        해시태그검색 = st.text_input("해시태그 검색", placeholder="#반전, #힐링")
-        일반검색 = st.text_input("영화명 / 감독 / 특징 검색")
-        정렬기준 = st.selectbox("정렬", ["평점 높은 순", "최신순", "관객수 높은 순", "영화명순"])
-        페이지당개수 = st.selectbox("페이지당 카드 수", [8, 10, 12, 15, 20], index=2)
-
-    filtered = df.copy()
-
-    if 선택국가:
-        filtered = filtered[filtered["국가"].isin(선택국가)]
-    if 선택장르:
-        filtered = filtered[filtered["장르"].isin(선택장르)]
-    if 선택시대:
-        filtered = filtered[filtered["시대구분"].isin(선택시대)]
-    if 선택감정:
-        filtered = filtered[filtered["감정태그"].apply(lambda x: 모든태그포함여부(x, 선택감정))]
-    if 선택상황:
-        filtered = filtered[filtered["상황태그"].apply(lambda x: 모든태그포함여부(x, 선택상황))]
-    if 해시태그검색.strip():
-        query_tags = [t.lstrip("#") for t in 태그분리(해시태그검색.replace(" ", ","))]
-        filtered = filtered[
-            filtered["해시태그"].apply(
-                lambda x: any(q.lower() in str(x).lower().replace("#", "") for q in query_tags)
-            )
-        ]
-    if 일반검색.strip():
-        q = 일반검색.lower()
-        filtered = filtered[
-            filtered["영화명"].str.lower().str.contains(q, na=False)
-            | filtered["감독"].str.lower().str.contains(q, na=False)
-            | filtered["특징태그"].str.lower().str.contains(q, na=False)
-        ]
-
-    if 정렬기준 == "평점 높은 순":
-        filtered = filtered.sort_values(["평점", "개봉연도"], ascending=[False, False], na_position="last")
-    elif 정렬기준 == "최신순":
-        filtered = filtered.sort_values(["개봉연도", "평점"], ascending=[False, False], na_position="last")
-    elif 정렬기준 == "관객수 높은 순":
-        filtered = filtered.sort_values(["관객수", "평점"], ascending=[False, False], na_position="last")
-    else:
-        filtered = filtered.sort_values("영화명", ascending=True)
-
-    top1, top2, top3 = st.columns(3)
-    with top1:
-        st.metric("전체 영화 수", len(df))
-    with top2:
-        st.metric("검색 결과 수", len(filtered))
-    with top3:
-        st.metric("장르 수", df["장르"].nunique())
+    top1, top2, top3, top4 = st.columns(4)
+    top1.metric("전체 영화 수", len(df))
+    top2.metric("검색 결과 수", len(filtered))
+    top3.metric("찜한 영화", len(st.session_state["wishlist"]))
+    top4.metric("본 영화", len(st.session_state["watched"]))
 
     if len(filtered) == 0:
         st.warning("조건에 맞는 영화가 없습니다. 필터를 조금 줄여보세요.")
@@ -877,9 +1120,29 @@ def 메인():
 
     st.markdown(히어로HTML생성(선택행, tmdb_api_key), unsafe_allow_html=True)
 
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        if st.button("🤍 찜하기 / 해제", use_container_width=True):
+            if 선택영화명 in st.session_state["wishlist"]:
+                st.session_state["wishlist"].remove(선택영화명)
+            else:
+                st.session_state["wishlist"].add(선택영화명)
+    with c2:
+        if st.button("✅ 본 영화 체크", use_container_width=True):
+            if 선택영화명 in st.session_state["watched"]:
+                st.session_state["watched"].remove(선택영화명)
+            else:
+                st.session_state["watched"].add(선택영화명)
+    with c3:
+        if st.button("🔁 다시 보고 싶음", use_container_width=True):
+            if 선택영화명 in st.session_state["rewatch"]:
+                st.session_state["rewatch"].remove(선택영화명)
+            else:
+                st.session_state["rewatch"].add(선택영화명)
+    with c4:
+        st.link_button("▶ 예고편 보기", str(선택행["예고편URL"]), use_container_width=True)
+
     전체페이지수 = max(1, math.ceil(len(filtered) / 페이지당개수))
-    if "현재페이지" not in st.session_state:
-        st.session_state["현재페이지"] = 1
     if st.session_state["현재페이지"] > 전체페이지수:
         st.session_state["현재페이지"] = 전체페이지수
 
@@ -911,17 +1174,17 @@ def 메인():
     끝 = 시작 + 페이지당개수
     page_df = filtered.iloc[시작:끝].copy()
 
-    st.markdown("<div class='section-title'>지금 많이 보는 영화</div>", unsafe_allow_html=True)
-    한줄카드수 = 5
-    for start in range(0, len(page_df), 한줄카드수):
-        chunk = page_df.iloc[start:start + 한줄카드수]
-        cols = st.columns(한줄카드수)
-        for col, (_, row) in zip(cols, chunk.iterrows()):
-            with col:
-                st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
+    추천섹션("지금 많이 보는 영화", page_df, tmdb_api_key, cols_per_row=5, max_items=len(page_df))
+    추천섹션("한국 흥행작 모음", df[df["국가"] == "한국"].sort_values("관객수", ascending=False), tmdb_api_key)
+    추천섹션("감성 로맨스 모음", df[df["장르"] == "로맨스"].sort_values("평점", ascending=False), tmdb_api_key)
+    추천섹션("몰입감 높은 스릴러", df[df["장르"] == "스릴러"].sort_values("평점", ascending=False), tmdb_api_key)
+    추천섹션("가족과 보기 좋은 작품", df[df["연령등급"].isin(["전체관람가", "12세 이상"])].sort_values("평점", ascending=False), tmdb_api_key)
+    추천섹션("2000년대 명작", df[df["시대구분"] == "2000년대"].sort_values("평점", ascending=False), tmdb_api_key)
+    추천섹션("연말 / 겨울 분위기 추천", df[df["해시태그"].str.contains("감성|가족|여운", na=False)].sort_values("평점", ascending=False), tmdb_api_key)
+    추천섹션("머리 비우고 보기 좋은 코미디", df[df["장르"] == "코미디"].sort_values("평점", ascending=False), tmdb_api_key)
 
     st.markdown("<div class='section-title'>선택한 영화 상세</div>", unsafe_allow_html=True)
-    info1, info2 = st.columns([1.05, 1.95])
+    info1, info2 = st.columns([1.0, 2.0])
 
     with info1:
         st.image(포스터주소가져오기(선택행, tmdb_api_key), use_container_width=True)
@@ -931,15 +1194,20 @@ def 메인():
         st.markdown(f"<div class='detail-head'>{escape(str(선택행['영화명']))}</div>", unsafe_allow_html=True)
         st.markdown(
             f"<div class='detail-meta'>{escape(str(선택행['국가']))} · {escape(str(선택행['장르']))} · "
-            f"{('-' if pd.isna(선택행['개봉연도']) else int(선택행['개봉연도']))} · "
+            f"{escape(str(선택행['세부장르']))} · {('-' if pd.isna(선택행['개봉연도']) else int(선택행['개봉연도']))} · "
             f"{('-' if pd.isna(선택행['상영시간']) else str(int(선택행['상영시간'])) + '분')} · "
-            f"감독 {escape(str(선택행['감독']))}</div>",
+            f"{escape(str(선택행['연령등급']))}</div>",
             unsafe_allow_html=True
         )
 
-        chips = "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(선택행["감정태그"])[:3]])
-        chips += "".join([f"<span class='chip'>{escape(t)}</span>" for t in 태그분리(선택행["상황태그"])[:3]])
-        st.markdown(f"<div class='chip-row'>{chips}</div>", unsafe_allow_html=True)
+        st.markdown(f"**한 줄 요약**: {선택행['한줄요약']}")
+        st.markdown(f"**짧은 소개**: {선택행['짧은소개']}")
+        st.markdown(f"**줄거리**: {선택행['줄거리']}")
+        st.markdown(f"**감독**: {선택행['감독']}")
+        st.markdown(f"**출연진**: {선택행['출연진']}")
+        st.markdown(f"**OTT 제공**: {선택행['OTT']}")
+        if str(선택행["시리즈"]).strip():
+            st.markdown(f"**시리즈 / 세계관**: {선택행['시리즈']}")
 
         st.markdown(
             f"""
@@ -957,8 +1225,8 @@ def 메인():
                     <div class='detail-box-value'>{금액표시(선택행['글로벌흥행액'])}</div>
                 </div>
                 <div class='detail-box'>
-                    <div class='detail-box-label'>시대 구분</div>
-                    <div class='detail-box-value'>{escape(str(선택행['시대구분']))}</div>
+                    <div class='detail-box-label'>러닝타임 구간</div>
+                    <div class='detail-box-value'>{러닝타임구간(선택행['상영시간'])}</div>
                 </div>
                 <div class='detail-box'>
                     <div class='detail-box-label'>감정 태그</div>
@@ -982,29 +1250,97 @@ def 메인():
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='section-title'>같은 장르 추천</div>", unsafe_allow_html=True)
-    추천df = df[(df["장르"] == 선택행["장르"]) & (df["영화명"] != 선택행["영화명"])].copy()
-    추천df = 추천df.sort_values(["평점", "개봉연도"], ascending=[False, False], na_position="last").head(8)
+    st.markdown("<div class='section-title'>내 평가 / 한 줄 리뷰</div>", unsafe_allow_html=True)
+    review_col1, review_col2 = st.columns([1, 2])
+    with review_col1:
+        user_score = st.slider("내 평점", 0.0, 10.0, float(st.session_state["user_rating"].get(선택영화명, 8.0)), 0.5)
+        if st.button("내 평점 저장", use_container_width=True):
+            st.session_state["user_rating"][선택영화명] = user_score
+    with review_col2:
+        current_review = st.session_state["user_review"].get(선택영화명, "")
+        review_text = st.text_area("한 줄 리뷰", value=current_review, height=100, placeholder="예: 긴장감이 끝까지 유지되는 반전 스릴러")
+        if st.button("리뷰 저장", use_container_width=True):
+            st.session_state["user_review"][선택영화명] = review_text
 
-    rec_cols = st.columns(4)
-    for idx, (_, rec) in enumerate(추천df.iterrows()):
-        with rec_cols[idx % 4]:
+    if 선택영화명 in st.session_state["user_rating"] or 선택영화명 in st.session_state["user_review"]:
+        st.info(
+            f"저장된 내 평점: {st.session_state['user_rating'].get(선택영화명, '-')} / "
+            f"저장된 한 줄 리뷰: {st.session_state['user_review'].get(선택영화명, '-')}"
+        )
+
+    st.markdown("<div class='section-title'>비슷한 작품 추천</div>", unsafe_allow_html=True)
+
+    같은장르 = df[(df["장르"] == 선택행["장르"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
+    같은감독 = df[(df["감독"] == 선택행["감독"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
+    시리즈추천 = df[(df["시리즈"] == 선택행["시리즈"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6) if str(선택행["시리즈"]).strip() else df.iloc[0:0]
+
+    배우목록 = 태그분리(str(선택행["출연진"]).replace(" (성우)", ""))
+    같은배우 = df[df["영화명"] != 선택행["영화명"]].copy()
+    같은배우 = 같은배우[같은배우["출연진"].apply(lambda x: any(actor in str(x) for actor in 배우목록))]
+    같은배우 = 같은배우.sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
+
+    rec1, rec2, rec3, rec4 = st.columns(4)
+
+    with rec1:
+        st.markdown("**같은 장르**")
+        for _, rec in 같은장르.iterrows():
             st.markdown(
-                f"""
-                <div class='rail-card'>
-                    <div class='rail-title'>{escape(str(rec['영화명']))}</div>
-                    <div class='rail-sub'>
-                        {escape(str(rec['국가']))} · {escape(str(rec['장르']))} · {('-' if pd.isna(rec['개봉연도']) else int(rec['개봉연도']))}<br>
-                        평점 {('-' if pd.isna(rec['평점']) else round(float(rec['평점']), 1))} · 특징 {escape(', '.join(태그분리(rec['특징태그'])[:2]) or '-')}
-                    </div>
-                </div>
-                """,
+                f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
+                f"<div class='rail-sub'>{escape(str(rec['국가']))} · {escape(str(rec['장르']))} · 평점 {rec['평점']}</div></div>",
                 unsafe_allow_html=True,
             )
+
+    with rec2:
+        st.markdown("**같은 감독**")
+        if len(같은감독) == 0:
+            st.info("같은 감독 작품이 없습니다.")
+        else:
+            for _, rec in 같은감독.iterrows():
+                st.markdown(
+                    f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
+                    f"<div class='rail-sub'>{escape(str(rec['감독']))} · {escape(str(rec['국가']))}</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+    with rec3:
+        st.markdown("**같은 배우**")
+        if len(같은배우) == 0:
+            st.info("같은 배우 기반 추천이 없습니다.")
+        else:
+            for _, rec in 같은배우.iterrows():
+                st.markdown(
+                    f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
+                    f"<div class='rail-sub'>{escape(str(rec['출연진']))}</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+    with rec4:
+        st.markdown("**같은 시리즈 / 세계관**")
+        if len(시리즈추천) == 0:
+            st.info("같은 시리즈 추천이 없습니다.")
+        else:
+            for _, rec in 시리즈추천.iterrows():
+                st.markdown(
+                    f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
+                    f"<div class='rail-sub'>{escape(str(rec['시리즈']))}</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+    st.markdown("<div class='section-title'>내 리스트</div>", unsafe_allow_html=True)
+    list_col1, list_col2, list_col3 = st.columns(3)
+    with list_col1:
+        st.markdown("**찜한 영화**")
+        st.write(list(st.session_state["wishlist"]) if st.session_state["wishlist"] else ["없음"])
+    with list_col2:
+        st.markdown("**본 영화**")
+        st.write(list(st.session_state["watched"]) if st.session_state["watched"] else ["없음"])
+    with list_col3:
+        st.markdown("**다시 보고 싶은 영화**")
+        st.write(list(st.session_state["rewatch"]) if st.session_state["rewatch"] else ["없음"])
 
     with st.expander("현재 검색 데이터 표 보기"):
         st.dataframe(page_df[표시컬럼], use_container_width=True, hide_index=True)
 
 
 if __name__ == "__main__":
-    메인()
+    메인()메인()
