@@ -1468,8 +1468,22 @@ def 영화팝업(row, tmdb_api_key):
     gross        = 금액표시(row["글로벌흥행액"])
     trailer_url  = str(row["예고편URL"])
 
-    # ── 2열: 왼쪽 포스터(고정) | 오른쪽 정보(스크롤 컨테이너) ──
-    col_img, col_info = st.columns([1, 1.9], gap="medium")
+    # 다이얼로그 전체 스크롤 활성화
+    st.markdown("""
+<style>
+[data-testid="stDialog"] [data-testid="stDialogScrollableContainer"] {
+    overflow-y: auto !important;
+    max-height: 85vh !important;
+}
+[data-testid="stDialogScrollableContainer"] {
+    overflow-y: auto !important;
+    max-height: 85vh !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    # 포스터 + 핵심 정보 (상단 고정 영역)
+    col_img, col_top = st.columns([1, 2], gap="medium")
 
     with col_img:
         st.image(poster, use_container_width=True)
@@ -1484,68 +1498,54 @@ def 영화팝업(row, tmdb_api_key):
             if st.button(lbl_v, use_container_width=True, key=f"pv_{title}"):
                 리스트토글("watched", title); st.rerun()
 
-    with col_info:
-        # 오른쪽 전체를 스크롤 컨테이너로 감쌈
-        with st.container(height=520, border=False):
+    with col_top:
+        st.markdown(f"### {title}")
+        st.caption(f"🌏 {country}  |  🎬 {genre} · {subgenre}  |  📅 {year}  |  ⏱ {runtime}  |  🔞 {age_rating}  |  ⭐ {rating}")
+        if series.strip():
+            st.caption(f"📺 시리즈: **{series}**")
+        st.info(f'"{one_liner}"')
+        s1, s2, s3 = st.columns(3)
+        s1.metric("⭐ 평점", rating)
+        s2.metric("👥 관객수", audience)
+        s3.metric("💰 흥행액", gross)
 
-            # 제목 & 메타
-            st.markdown(f"### {title}")
-            st.caption(
-                f"🌏 {country}  |  🎬 {genre} · {subgenre}  |  "
-                f"📅 {year}  |  ⏱ {runtime}  |  🔞 {age_rating}  |  ⭐ {rating}"
-            )
-            if series.strip():
-                st.caption(f"📺 시리즈: **{series}**")
+    # 구분선 후 나머지 정보 (스크롤로 내려서 볼 수 있는 영역)
+    st.divider()
 
-            # 한줄요약
-            st.info(f'"{one_liner}"')
+    st.markdown("**📋 기본 정보**")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(f"- **감독:** {director}")
+        st.markdown(f"- **연령등급:** {age_rating}")
+    with c2:
+        st.markdown(f"- **출연진:** {cast}")
+        if awards.strip():
+            st.markdown(f"- **수상:** {awards}")
 
-            # 통계
-            s1, s2, s3 = st.columns(3)
-            s1.metric("⭐ 평점", rating)
-            s2.metric("👥 관객수", audience)
-            s3.metric("💰 흥행액", gross)
+    st.divider()
 
-            st.divider()
+    st.markdown("**📖 줄거리**")
+    st.markdown(f"> {synopsis}")
 
-            # 기본 정보
-            st.markdown("**📋 기본 정보**")
-            st.markdown(f"- **감독:** {director}")
-            st.markdown(f"- **출연진:** {cast}")
-            st.markdown(f"- **연령등급:** {age_rating}")
-            if awards.strip():
-                st.markdown(f"- **수상:** {awards}")
+    st.divider()
 
-            st.divider()
+    all_tags = (
+        [f"🟢 {t}" for t in emotion_tags] +
+        [f"🔵 {t}" for t in situation_tags] +
+        [f"🟣 {t}" for t in feature_tags]
+    )
+    if all_tags:
+        st.markdown("**🏷️ 태그**")
+        st.markdown("  ".join(f"`{t}`" for t in all_tags))
 
-            # 줄거리
-            st.markdown("**📖 줄거리**")
-            st.markdown(f"> {synopsis}")
+    if ott_list:
+        st.markdown("**📺 OTT 플랫폼**")
+        st.markdown("  ".join(f"`▶ {o}`" for o in ott_list))
 
-            st.divider()
+    st.divider()
 
-            # 태그
-            st.markdown("**🏷️ 감정 · 상황 태그**")
-            all_tags = (
-                [f"🟢 {t}" for t in emotion_tags] +
-                [f"🔵 {t}" for t in situation_tags] +
-                [f"🟣 {t}" for t in feature_tags]
-            )
-            if all_tags:
-                st.markdown("  ".join(f"`{t}`" for t in all_tags))
-            else:
-                st.caption("태그 없음")
-
-            # OTT
-            if ott_list:
-                st.markdown("**📺 OTT 플랫폼**")
-                st.markdown("  ".join(f"`▶ {o}`" for o in ott_list))
-
-            st.divider()
-
-            # 대표 리뷰
-            st.markdown("**💬 대표 리뷰**")
-            st.warning(f'"{review}"')
+    st.markdown("**💬 대표 리뷰**")
+    st.warning(f'"{review}"')
 
 
 def 카드UI(row, tmdb_api_key):
