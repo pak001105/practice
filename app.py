@@ -16,7 +16,7 @@ DEFAULT_FILES = [
     BASE_DIR / "movie_recommendation_korean_dataset.xlsx",
 ]
 
-사용가능국가 = ["미국", "한국", "영국", "스페인", "인도", "일본", "중국", "대만"]
+사용가능국가 = ["미국", "한국", "영국", "스페인", "인도", "일본", "중국", "대만", "프랑스", "이탈리아", "독일", "멕시코", "호주", "캐나다", "덴마크", "이란", "아르헨티나"]
 시대순서 = ["1990년대 이전", "1990년대", "2000년대", "2010년대", "2020년대", "시대 미상"]
 
 COLUMN_ALIASES = {
@@ -201,6 +201,51 @@ def 장르프로필(장르):
             "연령등급": "12세 이상",
             "ott": "넷플릭스,디즈니플러스,애플TV+",
         },
+        "공포": {
+            "감정": "공포,긴장,스릴",
+            "상황": "밤,혼자,겁없을때",
+            "특징": "공포,음산함,충격",
+            "해시태그": "공포,호러,긴장",
+            "세부장르": "심리공포",
+            "연령등급": "18세 이상",
+            "ott": "넷플릭스,왓챠,웨이브",
+        },
+        "범죄": {
+            "감정": "긴장,몰입,통쾌함",
+            "상황": "혼자,밤,반전좋아할때",
+            "특징": "범죄,두뇌싸움,반전",
+            "해시태그": "범죄,두뇌,반전",
+            "세부장르": "범죄스릴러",
+            "연령등급": "15세 이상",
+            "ott": "넷플릭스,왓챠,티빙",
+        },
+        "뮤지컬": {
+            "감정": "설렘,감동,흥겨움",
+            "상황": "연인과,기분좋을때,음악좋아할때",
+            "특징": "음악,노래,춤",
+            "해시태그": "뮤지컬,음악,감동",
+            "세부장르": "뮤지컬드라마",
+            "연령등급": "전체관람가",
+            "ott": "넷플릭스,디즈니플러스,애플TV+",
+        },
+        "다큐멘터리": {
+            "감정": "경이로움,사색,감동",
+            "상황": "혼자,생각하고싶을때,공부할때",
+            "특징": "실화,사실,통찰",
+            "해시태그": "다큐,실화,통찰",
+            "세부장르": "자연다큐",
+            "연령등급": "전체관람가",
+            "ott": "넷플릭스,왓챠,애플TV+",
+        },
+        "전쟁": {
+            "감정": "긴장,감동,숙연함",
+            "상황": "혼자,진지하게볼때",
+            "특징": "전쟁,역사,인간",
+            "해시태그": "전쟁,역사,인간",
+            "세부장르": "전쟁드라마",
+            "연령등급": "15세 이상",
+            "ott": "넷플릭스,왓챠,디즈니플러스",
+        },
     }
     return mapping.get(
         장르,
@@ -218,7 +263,12 @@ def 장르프로필(장르):
 
 def 시리즈추출(영화명):
     rules = [
-        ("어벤져스", "어벤져스 시리즈"),
+        ("어벤져스", "마블 시네마틱 유니버스"),
+        ("아이언맨", "마블 시네마틱 유니버스"),
+        ("캡틴 아메리카", "마블 시네마틱 유니버스"),
+        ("토르", "마블 시네마틱 유니버스"),
+        ("블랙팬서", "마블 시네마틱 유니버스"),
+        ("스파이더맨", "마블 시네마틱 유니버스"),
         ("범죄도시", "범죄도시 시리즈"),
         ("신과함께", "신과함께 시리즈"),
         ("겨울왕국", "겨울왕국 시리즈"),
@@ -227,6 +277,16 @@ def 시리즈추출(영화명):
         ("킹스맨", "킹스맨 시리즈"),
         ("007", "007 시리즈"),
         ("적벽대전", "삼국지 시리즈"),
+        ("분노의 질주", "분노의 질주 시리즈"),
+        ("미션 임파서블", "미션 임파서블 시리즈"),
+        ("존 윅", "존 윅 시리즈"),
+        ("매트릭스", "매트릭스 시리즈"),
+        ("반지의 제왕", "반지의 제왕 시리즈"),
+        ("호빗", "반지의 제왕 세계관"),
+        ("토이 스토리", "토이 스토리 시리즈"),
+        ("인크레더블", "인크레더블 시리즈"),
+        ("쿵푸팬더", "쿵푸팬더 시리즈"),
+        ("슈렉", "슈렉 시리즈"),
     ]
     for key, value in rules:
         if key in 영화명:
@@ -236,14 +296,24 @@ def 시리즈추출(영화명):
 
 def 수상여부생성(영화명):
     awards_map = {
-        "기생충": "아카데미 작품상 포함 주요 국제영화제 수상",
-        "조커": "베니스국제영화제 황금사자상, 아카데미 주요 부문 수상",
-        "라라랜드": "아카데미 다수 부문 수상",
-        "킹스 스피치": "아카데미 작품상 포함 주요 부문 수상",
-        "센과 치히로의 행방불명": "아카데미 장편애니메이션상 수상",
-        "올드보이": "칸영화제 심사위원대상 수상",
-        "판의 미로": "아카데미 기술 부문 수상",
-        "와호장룡": "아카데미 외국어영화상 포함 주요 부문 수상",
+        "기생충": "아카데미 작품상·감독상·각본상·국제영화상 4관왕",
+        "조커": "베니스국제영화제 황금사자상, 아카데미 남우주연상",
+        "라라랜드": "아카데미 감독상·여우주연상 포함 6개 부문 수상",
+        "킹스 스피치": "아카데미 작품상·감독상·남우주연상 포함 4관왕",
+        "센과 치히로의 행방불명": "아카데미 장편애니메이션상, 베를린영화제 황금곰상",
+        "올드보이": "칸영화제 심사위원대상",
+        "판의 미로": "아카데미 촬영·미술·분장상 수상",
+        "와호장룡": "아카데미 외국어영화상·촬영상 포함 4관왕",
+        "노매드랜드": "아카데미 작품상·감독상·여우주연상 3관왕",
+        "드라이브 마이 카": "아카데미 국제영화상, 칸영화제 각본상",
+        "로마": "아카데미 감독상·국제영화상·촬영상 수상",
+        "문라이트": "아카데미 작품상·각색상·남우조연상 수상",
+        "위플래쉬": "아카데미 편집·녹음·남우조연상 수상",
+        "버드맨": "아카데미 작품상·감독상·각본상·촬영상 수상",
+        "그래비티": "아카데미 감독상·촬영상 포함 7관왕",
+        "아티스트": "아카데미 작품상·감독상·남우주연상 수상",
+        "헤어질 결심": "칸영화제 감독상",
+        "브로커": "칸영화제 남우주연상 (송강호)",
     }
     return awards_map.get(영화명, "흥행 및 평단 호평")
 
@@ -258,20 +328,33 @@ def 대표리뷰생성(장르, 영화명):
         "판타지": f"{영화명}은 세계관과 비주얼이 강점이라 몰입해서 보기 좋습니다.",
         "코미디": f"{영화명}은 분위기를 가볍게 만들고 싶을 때 보기 좋은 영화입니다.",
         "SF": f"{영화명}은 설정과 세계관을 따라가는 재미가 큰 작품입니다.",
+        "공포": f"{영화명}은 분위기와 긴장감이 끝까지 살아있어 공포 팬에게 추천합니다.",
+        "범죄": f"{영화명}은 두뇌 싸움과 반전이 매력적인 범죄 영화입니다.",
+        "뮤지컬": f"{영화명}은 음악과 영상미가 어우러져 보는 내내 즐거운 작품입니다.",
+        "전쟁": f"{영화명}은 전쟁의 참혹함과 인간의 의지를 동시에 담아낸 수작입니다.",
     }
     return mapping.get(장르, f"{영화명}은 지금 분위기에 맞춰 보기 좋은 추천작입니다.")
 
 
 def 출연진생성(국가, 장르, idx):
     pools = {
-        "한국": ["송강호", "황정민", "이병헌", "전지현", "정우성", "박정민", "마동석", "김혜수"],
-        "미국": ["레오나르도 디카프리오", "톰 크루즈", "로버트 다우니 주니어", "엠마 스톤", "라이언 고슬링", "크리스 에반스"],
-        "영국": ["콜린 퍼스", "에디 레드메인", "휴 그랜트", "케이라 나이틀리", "대니얼 크레이그"],
-        "스페인": ["하비에르 바르뎀", "페넬로페 크루즈", "벨렌 루에다", "마리오 카사스"],
-        "인도": ["아미르 칸", "샤룩 칸", "란비르 카푸르", "디피카 파두콘", "알리아 바트"],
-        "일본": ["기무라 타쿠야", "히로세 스즈", "아라가키 유이", "야마자키 켄토"],
-        "중국": ["이연걸", "장쯔이", "공리", "주윤발", "주성치"],
-        "대만": ["계륜미", "천이한", "왕대륙", "가진동", "주걸륜"],
+        "한국": ["송강호", "황정민", "이병헌", "전지현", "정우성", "박정민", "마동석", "김혜수", "유아인", "공유", "하정우", "전도연", "손예진", "조정석", "류준열", "박서준"],
+        "미국": ["레오나르도 디카프리오", "톰 크루즈", "로버트 다우니 주니어", "엠마 스톤", "라이언 고슬링", "크리스 에반스", "브래드 피트", "앤젤리나 졸리", "메릴 스트립", "케이트 블란쳇", "조니 뎁", "맷 데이먼", "조지 클루니", "나탈리 포트만"],
+        "영국": ["콜린 퍼스", "에디 레드메인", "휴 그랜트", "케이라 나이틀리", "대니얼 크레이그", "케이트 윈슬렛", "베네딕트 컴버배치", "톰 히들스턴"],
+        "스페인": ["하비에르 바르뎀", "페넬로페 크루즈", "벨렌 루에다", "마리오 카사스", "안토니오 반데라스"],
+        "인도": ["아미르 칸", "샤룩 칸", "란비르 카푸르", "디피카 파두콘", "알리아 바트", "살만 칸"],
+        "일본": ["기무라 타쿠야", "히로세 스즈", "아라가키 유이", "야마자키 켄토", "마츠야마 켄이치", "나가사와 마사미"],
+        "중국": ["이연걸", "장쯔이", "공리", "주윤발", "주성치", "양조위", "장국영"],
+        "대만": ["계륜미", "천이한", "왕대륙", "가진동", "주걸륜", "서약선"],
+        "프랑스": ["오드리 토투", "뱅상 카셀", "마리옹 코티아르", "장 뤽 고다르", "이자벨 위페르"],
+        "이탈리아": ["모니카 벨루치", "로베르토 베니니", "소피아 로렌", "마르첼로 마스트로이안니"],
+        "독일": ["다이안 크루거", "미카엘 하네케", "팀 뵈르나르"],
+        "멕시코": ["가엘 가르시아 베르날", "디에고 루나", "살마 아이엑"],
+        "호주": ["니콜 키드먼", "케이트 블란쳇", "휴 잭맨", "멜 깁슨"],
+        "캐나다": ["라이언 레이놀즈", "짐 캐리", "마이크 마이어스", "킬리안 머피"],
+        "덴마크": ["마즈 미켈슨", "다리아 비코브스카야"],
+        "이란": ["레이라 하타미", "마니아 아크바리"],
+        "아르헨티나": ["리카르도 다린", "메르세데스 모란"],
     }
     base = pools.get(국가, ["배우A", "배우B", "배우C"])
     a = base[idx % len(base)]
@@ -294,6 +377,10 @@ def 한줄요약생성(장르, 특징태그):
         "판타지": f"{핵심}이 돋보이는 판타지 모험극",
         "코미디": f"{핵심}으로 기분 좋게 웃을 수 있는 코미디",
         "SF": f"{핵심}과 세계관이 매력적인 SF 영화",
+        "공포": f"섬뜩한 {핵심}이 가득한 공포 영화",
+        "범죄": f"{핵심}이 넘치는 긴장감 있는 범죄 영화",
+        "뮤지컬": f"노래와 {핵심}이 어우러진 뮤지컬 영화",
+        "전쟁": f"{핵심}과 인간의 의지를 그린 전쟁 영화",
     }
     return mapping.get(장르, "지금 보기 좋은 추천 영화")
 
@@ -319,14 +406,51 @@ def 예고편URL생성(query):
 def 기본데이터생성():
     movie_map = {
         "미국": [
-            ("아바타", 2009, "SF", 162, 7.9, "제임스 카메론", "Avatar"),
+            ("아바타", 2009, "SF", 162, 7.9, "제임스 카메론", "Avatar 2009"),
             ("아바타: 물의 길", 2022, "SF", 192, 7.6, "제임스 카메론", "Avatar The Way of Water"),
             ("어벤져스: 엔드게임", 2019, "액션", 181, 8.4, "안소니 루소, 조 루소", "Avengers Endgame"),
             ("어벤져스: 인피니티 워", 2018, "액션", 149, 8.4, "안소니 루소, 조 루소", "Avengers Infinity War"),
-            ("타이타닉", 1997, "로맨스", 194, 7.9, "제임스 카메론", "Titanic"),
-            ("인터스텔라", 2014, "SF", 169, 8.7, "크리스토퍼 놀란", "Interstellar"),
-            ("다크 나이트", 2008, "액션", 152, 9.0, "크리스토퍼 놀란", "The Dark Knight"),
-            ("라라랜드", 2016, "로맨스", 128, 8.0, "데이미언 셔젤", "La La Land"),
+            ("타이타닉", 1997, "로맨스", 194, 7.9, "제임스 카메론", "Titanic 1997"),
+            ("인터스텔라", 2014, "SF", 169, 8.7, "크리스토퍼 놀란", "Interstellar 2014"),
+            ("다크 나이트", 2008, "액션", 152, 9.0, "크리스토퍼 놀란", "The Dark Knight 2008"),
+            ("라라랜드", 2016, "뮤지컬", 128, 8.0, "데이미언 셔젤", "La La Land 2016"),
+            ("조커", 2019, "드라마", 122, 8.4, "토드 필립스", "Joker 2019"),
+            ("그래비티", 2013, "SF", 91, 7.7, "알폰소 쿠아론", "Gravity 2013"),
+            ("노매드랜드", 2020, "드라마", 108, 7.3, "클로이 자오", "Nomadland 2020"),
+            ("문라이트", 2016, "드라마", 111, 7.4, "배리 젠킨스", "Moonlight 2016"),
+            ("위플래쉬", 2014, "드라마", 107, 8.5, "데이미언 셔젤", "Whiplash 2014"),
+            ("버드맨", 2014, "드라마", 119, 7.7, "알레한드로 곤살레스 이냐리투", "Birdman 2014"),
+            ("매드맥스: 분노의 도로", 2015, "액션", 120, 8.1, "조지 밀러", "Mad Max Fury Road 2015"),
+            ("존 윅", 2014, "액션", 101, 7.4, "채드 스타헬스키", "John Wick 2014"),
+            ("인셉션", 2010, "SF", 148, 8.8, "크리스토퍼 놀란", "Inception 2010"),
+            ("쇼생크 탈출", 1994, "드라마", 142, 9.3, "프랭크 다라본트", "The Shawshank Redemption"),
+            ("포레스트 검프", 1994, "드라마", 142, 8.8, "로버트 저메키스", "Forrest Gump 1994"),
+            ("레옹", 1994, "액션", 110, 8.5, "뤽 베송", "Leon The Professional"),
+            ("펄프 픽션", 1994, "범죄", 154, 8.9, "쿠엔틴 타란티노", "Pulp Fiction 1994"),
+            ("양들의 침묵", 1991, "스릴러", 118, 8.6, "조나단 드미", "The Silence of the Lambs"),
+            ("매트릭스", 1999, "SF", 136, 8.7, "워쇼스키 자매", "The Matrix 1999"),
+            ("분노의 질주: 더 얼티메이트", 2009, "액션", 107, 6.5, "저스틴 린", "Fast and Furious 2009"),
+            ("미션 임파서블: 폴아웃", 2018, "액션", 147, 7.7, "크리스토퍼 맥쿼리", "Mission Impossible Fallout"),
+            ("토이 스토리 4", 2019, "애니메이션", 100, 7.7, "조시 쿨리", "Toy Story 4"),
+            ("코코", 2017, "애니메이션", 105, 8.4, "리 언크리치", "Coco 2017"),
+            ("소울", 2020, "애니메이션", 100, 8.0, "피트 닥터", "Soul Pixar 2020"),
+            ("업", 2009, "애니메이션", 96, 8.2, "피트 닥터", "Up Pixar 2009"),
+            ("월-E", 2008, "애니메이션", 98, 8.4, "앤드루 스탠튼", "WALL-E 2008"),
+            ("겨울왕국 2", 2019, "애니메이션", 103, 6.8, "크리스 벅, 제니퍼 리", "Frozen 2 2019"),
+            ("반지의 제왕: 반지 원정대", 2001, "판타지", 178, 8.8, "피터 잭슨", "Lord of the Rings Fellowship"),
+            ("해리 포터와 마법사의 돌", 2001, "판타지", 152, 7.6, "크리스 콜럼버스", "Harry Potter Sorcerers Stone"),
+            ("나이트메어", 2021, "공포", 110, 7.5, "스콧 쿠퍼", "Antlers 2021"),
+            ("겟 아웃", 2017, "공포", 104, 7.7, "조던 필", "Get Out 2017"),
+            ("어스", 2019, "공포", 116, 6.8, "조던 필", "Us 2019"),
+            ("허트 로커", 2008, "전쟁", 131, 7.5, "캐스린 비글로우", "The Hurt Locker"),
+            ("덩케르크", 2017, "전쟁", 106, 7.4, "크리스토퍼 놀란", "Dunkirk 2017"),
+            ("블랙호크 다운", 2001, "전쟁", 144, 7.7, "리들리 스콧", "Black Hawk Down"),
+            ("아이리시맨", 2019, "범죄", 209, 7.8, "마틴 스코세이지", "The Irishman 2019"),
+            ("기묘한 이야기", 2021, "SF", 130, 8.0, "더퍼 브라더스", "Stranger Things Movie"),
+            ("탑건: 매버릭", 2022, "액션", 130, 8.3, "조셉 코신스키", "Top Gun Maverick"),
+            ("오펜하이머", 2023, "드라마", 180, 8.9, "크리스토퍼 놀란", "Oppenheimer 2023"),
+            ("바비", 2023, "코미디", 114, 6.9, "그레타 거윅", "Barbie 2023"),
+            ("가디언즈 오브 갤럭시 3", 2023, "SF", 150, 8.0, "제임스 건", "Guardians of the Galaxy 3"),
         ],
         "한국": [
             ("명량", 2014, "액션", 128, 7.1, "김한민", "The Admiral Roaring Currents"),
@@ -337,43 +461,175 @@ def 기본데이터생성():
             ("서울의 봄", 2023, "드라마", 141, 8.3, "김성수", "12.12 The Day"),
             ("암살", 2015, "액션", 139, 7.3, "최동훈", "Assassination 2015"),
             ("범죄도시 2", 2022, "액션", 106, 7.2, "이상용", "The Roundup"),
+            ("범죄도시 3", 2023, "액션", 105, 7.0, "이상용", "The Roundup 3"),
             ("7번방의 선물", 2013, "코미디", 127, 8.2, "이환경", "Miracle in Cell No 7"),
             ("도둑들", 2012, "액션", 135, 6.8, "최동훈", "The Thieves"),
             ("변호인", 2013, "드라마", 127, 7.7, "양우석", "The Attorney"),
             ("부산행", 2016, "스릴러", 118, 7.6, "연상호", "Train to Busan"),
-            ("기생충", 2019, "스릴러", 132, 8.5, "봉준호", "Parasite"),
-            ("올드보이", 2003, "스릴러", 120, 8.4, "박찬욱", "Oldboy"),
+            ("기생충", 2019, "스릴러", 132, 8.5, "봉준호", "Parasite 2019"),
+            ("올드보이", 2003, "스릴러", 120, 8.4, "박찬욱", "Oldboy 2003"),
             ("괴물", 2006, "스릴러", 119, 7.1, "봉준호", "The Host 2006"),
             ("헤어질 결심", 2022, "로맨스", 138, 7.3, "박찬욱", "Decision to Leave"),
             ("과속스캔들", 2008, "코미디", 108, 7.2, "강형철", "Scandal Makers"),
             ("광해, 왕이 된 남자", 2012, "드라마", 131, 7.8, "추창민", "Masquerade"),
             ("내부자들", 2015, "드라마", 130, 7.8, "우민호", "Inside Men"),
             ("1987", 2017, "드라마", 129, 7.8, "장준환", "1987 When the Day Comes"),
+            ("밀정", 2016, "액션", 140, 7.1, "김지운", "The Age of Shadows"),
+            ("택시운전사", 2017, "드라마", 137, 7.7, "장훈", "A Taxi Driver"),
+            ("공작", 2018, "스릴러", 137, 7.4, "윤종빈", "The Spy Gone North"),
+            ("남산의 부장들", 2020, "드라마", 114, 7.3, "우민호", "The Man Standing Next"),
+            ("강철비", 2017, "액션", 139, 7.3, "양우석", "Steel Rain"),
+            ("아수라", 2016, "범죄", 134, 7.1, "김성수", "Asura The City of Madness"),
+            ("신세계", 2013, "범죄", 134, 8.2, "박훈정", "New World 2013"),
+            ("베를린", 2013, "액션", 135, 7.3, "류승완", "The Berlin File"),
+            ("끝까지 간다", 2014, "스릴러", 111, 7.9, "김성훈", "A Hard Day"),
+            ("악마를 보았다", 2010, "스릴러", 141, 7.8, "김지운", "I Saw the Devil"),
+            ("친절한 금자씨", 2005, "드라마", 112, 7.5, "박찬욱", "Sympathy for Lady Vengeance"),
+            ("봄날은 간다", 2001, "로맨스", 106, 7.7, "허진호", "One Fine Spring Day"),
+            ("클래식", 2003, "로맨스", 127, 7.8, "곽재용", "The Classic"),
+            ("엽기적인 그녀", 2001, "로맨스", 122, 7.8, "곽재용", "My Sassy Girl Korean"),
+            ("건축학개론", 2012, "로맨스", 117, 7.7, "엄태화", "Architecture 101"),
+            ("써니", 2011, "드라마", 124, 7.8, "강형철", "Sunny 2011 Korean"),
+            ("수상한 그녀", 2014, "코미디", 124, 7.5, "황동혁", "Miss Granny 2014"),
+            ("완벽한 타인", 2018, "코미디", 101, 7.7, "이재규", "Intimate Strangers Korean"),
+            ("기억의 밤", 2017, "스릴러", 109, 6.9, "장항준", "Forgotten 2017 Korean"),
+            ("곡성", 2016, "공포", 156, 7.4, "나홍진", "The Wailing"),
+            ("파묘", 2024, "공포", 134, 7.3, "장재현", "Exhuma 2024"),
+            ("범죄도시 4", 2024, "액션", 109, 7.1, "허명행", "The Roundup 4"),
+            ("웡카", 2024, "뮤지컬", 116, 7.2, "폴 킹", "Wonka 2024"),
+            ("브로커", 2022, "드라마", 129, 7.2, "고레에다 히로카즈", "Broker 2022"),
+            ("비상선언", 2022, "스릴러", 140, 6.0, "한재림", "Emergency Declaration"),
+            ("외계+인 1부", 2022, "SF", 142, 5.8, "최동훈", "Alienoid Part 1"),
         ],
         "영국": [
-            ("007 스카이폴", 2012, "액션", 143, 7.8, "샘 멘데스", "Skyfall"),
-            ("해리 포터와 죽음의 성물 2", 2011, "판타지", 130, 8.1, "데이비드 예이츠", "Harry Potter and the Deathly Hallows Part 2"),
-            ("킹스 스피치", 2010, "드라마", 118, 8.0, "톰 후퍼", "The King's Speech"),
+            ("007 스카이폴", 2012, "액션", 143, 7.8, "샘 멘데스", "Skyfall 2012"),
+            ("007 노 타임 투 다이", 2021, "액션", 163, 7.3, "캐리 후쿠나가", "No Time To Die"),
+            ("해리 포터와 죽음의 성물 2", 2011, "판타지", 130, 8.1, "데이비드 예이츠", "Harry Potter Deathly Hallows 2"),
+            ("킹스 스피치", 2010, "드라마", 118, 8.0, "톰 후퍼", "The Kings Speech"),
+            ("킹스맨: 시크릿 에이전트", 2014, "액션", 129, 7.7, "매튜 본", "Kingsman Secret Service"),
+            ("1917", 2019, "전쟁", 119, 8.3, "샘 멘데스", "1917 2019"),
+            ("파이트 클럽", 1999, "드라마", 139, 8.8, "데이비드 핀처", "Fight Club 1999"),
+            ("블랙미러: 밴더스내치", 2018, "SF", 90, 7.2, "데이비드 슐로스버그", "Black Mirror Bandersnatch"),
+            ("어바웃 타임", 2013, "로맨스", 123, 7.8, "리처드 커티스", "About Time 2013"),
+            ("러브 액츄얼리", 2003, "로맨스", 135, 7.6, "리처드 커티스", "Love Actually 2003"),
+            ("브리짓 존스의 일기", 2001, "로맨스", 97, 6.7, "샤론 맥과이어", "Bridget Jones Diary"),
+            ("노팅 힐", 1999, "로맨스", 124, 7.2, "로저 미첼", "Notting Hill 1999"),
+            ("패딩턴 2", 2017, "코미디", 103, 7.8, "폴 킹", "Paddington 2"),
+            ("오만과 편견", 2005, "로맨스", 129, 7.8, "조 라이트", "Pride and Prejudice 2005"),
+            ("셰익스피어 인 러브", 1998, "로맨스", 123, 7.1, "존 매든", "Shakespeare in Love"),
+            ("빌리 엘리어트", 2000, "드라마", 110, 7.7, "스티븐 달드리", "Billy Elliot 2000"),
         ],
         "스페인": [
-            ("판의 미로", 2006, "판타지", 118, 8.2, "기예르모 델 토로", "Pan's Labyrinth"),
+            ("판의 미로", 2006, "판타지", 118, 8.2, "기예르모 델 토로", "Pans Labyrinth"),
             ("인비저블 게스트", 2016, "스릴러", 106, 8.0, "오리올 파울로", "The Invisible Guest"),
+            ("더 바디", 2012, "스릴러", 108, 7.4, "오리올 파울로", "The Body 2012"),
+            ("플랫폼", 2019, "스릴러", 94, 7.0, "가우데르 가스테아고이티아", "The Platform 2019"),
+            ("버고니아", 2010, "드라마", 90, 7.2, "넬리 부엔디아", "Buried 2010"),
+            ("오픈 유어 아이즈", 1997, "SF", 117, 7.8, "알레한드로 아메나바르", "Open Your Eyes 1997"),
+            ("악마의 등뼈", 2001, "공포", 106, 7.5, "기예르모 델 토로", "The Devils Backbone"),
         ],
         "인도": [
             ("세 얼간이", 2009, "코미디", 170, 8.4, "라지쿠마르 히라니", "3 Idiots"),
             ("당갈", 2016, "드라마", 161, 8.3, "니테시 티와리", "Dangal"),
+            ("PK", 2014, "코미디", 153, 8.1, "라지쿠마르 히라니", "PK 2014"),
+            ("발리우드 퀸", 2014, "드라마", 116, 8.1, "비카스 발 굴", "Queen 2014"),
+            ("RRR", 2022, "액션", 187, 7.8, "라자무울리", "RRR 2022"),
+            ("바후발리: 더 비기닝", 2015, "액션", 159, 8.1, "라자무울리", "Baahubali The Beginning"),
+            ("딜왈레 둘하니야 레 자옌게", 1995, "로맨스", 189, 8.1, "아디트야 초프라", "Dilwale Dulhania Le Jayenge"),
+            ("무투", 1995, "액션", 166, 7.7, "K. S. 라비쿠마르", "Muthu Tamil"),
+            ("슈퍼 30", 2019, "드라마", 152, 7.3, "비카스 발 굴", "Super 30 2019"),
         ],
         "일본": [
             ("센과 치히로의 행방불명", 2001, "애니메이션", 125, 8.6, "미야자키 하야오", "Spirited Away"),
-            ("너의 이름은", 2016, "로맨스", 106, 8.4, "신카이 마코토", "Your Name"),
+            ("너의 이름은", 2016, "로맨스", 106, 8.4, "신카이 마코토", "Your Name Kimi no Na wa"),
+            ("모노노케 히메", 1997, "애니메이션", 134, 8.4, "미야자키 하야오", "Princess Mononoke"),
+            ("하울의 움직이는 성", 2004, "애니메이션", 119, 8.2, "미야자키 하야오", "Howls Moving Castle"),
+            ("이웃집 토토로", 1988, "애니메이션", 86, 8.1, "미야자키 하야오", "My Neighbor Totoro"),
+            ("날씨의 아이", 2019, "로맨스", 114, 7.5, "신카이 마코토", "Weathering With You"),
+            ("스즈메의 문단속", 2022, "애니메이션", 122, 7.8, "신카이 마코토", "Suzume 2022"),
+            ("드라이브 마이 카", 2021, "드라마", 179, 7.8, "하마구치 류스케", "Drive My Car"),
+            ("링", 1998, "공포", 96, 7.2, "나카타 히데오", "Ringu 1998"),
+            ("배틀 로얄", 2000, "스릴러", 114, 7.5, "키타노 타케시", "Battle Royale 2000"),
+            ("하나비", 1997, "드라마", 103, 7.5, "키타노 타케시", "Hana-bi 1997"),
+            ("도라에몽: 스탠바이미", 2014, "애니메이션", 95, 7.0, "다카하시 료이치", "Stand by Me Doraemon"),
+            ("귀멸의 칼날: 무한열차편", 2020, "애니메이션", 117, 8.2, "소토자키 하루오", "Demon Slayer Mugen Train"),
+            ("극장판 주술회전 0", 2021, "애니메이션", 105, 7.9, "박성후", "Jujutsu Kaisen 0"),
+            ("더 퍼스트 슬램덩크", 2022, "애니메이션", 124, 8.3, "이노우에 타케히코", "The First Slam Dunk"),
         ],
         "중국": [
             ("와호장룡", 2000, "액션", 120, 7.9, "이안", "Crouching Tiger Hidden Dragon"),
             ("쿵푸허슬", 2004, "코미디", 99, 7.7, "주성치", "Kung Fu Hustle"),
+            ("영웅", 2002, "액션", 99, 7.9, "장이머우", "Hero 2002"),
+            ("연인", 2004, "로맨스", 119, 7.5, "장이머우", "House of Flying Daggers"),
+            ("귀향", 2014, "드라마", 99, 7.4, "장이머우", "Coming Home 2014"),
+            ("적벽대전", 2008, "액션", 148, 7.0, "오우삼", "Red Cliff 2008"),
+            ("나의 소녀시대", 2015, "로맨스", 131, 7.8, "천위샨", "Our Times 2015 Taiwan"),
+            ("유랑지구", 2019, "SF", 125, 7.0, "궈판", "The Wandering Earth"),
+            ("유랑지구 2", 2023, "SF", 173, 7.7, "궈판", "The Wandering Earth 2"),
+            ("장강 7호", 2008, "SF", 86, 6.4, "주성치", "CJ7 2008"),
+            ("소림축구", 2001, "코미디", 87, 7.4, "주성치", "Shaolin Soccer"),
         ],
         "대만": [
             ("말할 수 없는 비밀", 2007, "로맨스", 101, 7.5, "주걸륜", "Secret 2007"),
             ("메리 마이 데드 바디", 2023, "코미디", 130, 7.3, "청웨이하오", "Marry My Dead Body"),
+            ("나의 소녀시대", 2015, "로맨스", 131, 7.8, "천위샨", "Our Times 2015"),
+            ("그 시절 우리가 좋아했던 소녀", 2011, "로맨스", 110, 7.5, "주더신", "You Are the Apple of My Eye"),
+            ("오색", 2020, "드라마", 107, 7.5, "청웨이하오", "The Falls"),
+        ],
+        "프랑스": [
+            ("아멜리에", 2001, "로맨스", 122, 8.3, "장 피에르 주네", "Amelie 2001"),
+            ("레 미제라블", 2019, "드라마", 104, 7.7, "라지 리", "Les Miserables 2019"),
+            ("비밀은 없다", 2010, "스릴러", 108, 7.2, "에릭 라르티고", "The Secret 2010"),
+            ("피아노 치는 여자", 2001, "드라마", 130, 7.2, "미하엘 하네케", "The Piano Teacher"),
+            ("인투쳐블: 1%의 우정", 2011, "드라마", 112, 8.5, "올리비에 나카쉐", "The Intouchables"),
+            ("사랑은 아무나 하나", 2014, "로맨스", 96, 7.5, "졸리 퀸", "Love at First Fight"),
+            ("마틸다", 1996, "코미디", 98, 7.0, "대니 드비토", "Matilda 1996"),
+            ("블루는 따뜻한 색", 2013, "드라마", 179, 7.8, "압델라티프 케시슈", "Blue is the Warmest Color"),
+            ("미드나잇 인 파리", 2011, "로맨스", 94, 7.7, "우디 앨런", "Midnight in Paris"),
+        ],
+        "이탈리아": [
+            ("인생은 아름다워", 1997, "드라마", 116, 8.6, "로베르토 베니니", "Life is Beautiful"),
+            ("시네마 천국", 1988, "드라마", 155, 8.5, "주세페 토르나토레", "Cinema Paradiso"),
+            ("일 포스티노", 1994, "드라마", 108, 7.7, "마이클 래드포드", "Il Postino"),
+            ("말레나", 2000, "드라마", 92, 7.5, "주세페 토르나토레", "Malena 2000"),
+            ("위대한 아름다움", 2013, "드라마", 142, 7.7, "파울로 소렌티노", "The Great Beauty"),
+        ],
+        "독일": [
+            ("타인의 삶", 2006, "드라마", 137, 8.4, "플로리안 헨켈 폰 도너스마르크", "The Lives of Others"),
+            ("굿바이 레닌!", 2003, "코미디", 121, 7.7, "볼프강 베커", "Goodbye Lenin"),
+            ("베로니카 포스의 갈망", 1982, "드라마", 104, 7.5, "라이너 베르너 파스빈더", "Veronika Voss"),
+            ("작전명 발키리", 2008, "전쟁", 121, 7.1, "브라이언 싱어", "Valkyrie 2008"),
+            ("Das Boot", 1981, "전쟁", 149, 8.3, "볼프강 페터젠", "Das Boot 1981"),
+        ],
+        "멕시코": [
+            ("로마", 2018, "드라마", 135, 7.7, "알폰소 쿠아론", "Roma 2018"),
+            ("아무르", 2012, "드라마", 127, 7.8, "미하엘 하네케", "Amour 2012"),
+            ("크리멘", 2019, "드라마", 130, 7.4, "아마트 에스칼란테", "New Order"),
+            ("Y Tu Mama Tambien", 2001, "드라마", 106, 7.6, "알폰소 쿠아론", "Y Tu Mama Tambien"),
+        ],
+        "호주": [
+            ("매드맥스", 1979, "SF", 88, 6.9, "조지 밀러", "Mad Max 1979"),
+            ("피아노", 1993, "드라마", 121, 7.5, "제인 캠피온", "The Piano 1993"),
+            ("물랑 루즈!", 2001, "뮤지컬", 128, 7.6, "바즈 루어만", "Moulin Rouge 2001"),
+            ("오스트레일리아", 2008, "드라마", 165, 6.6, "바즈 루어만", "Australia 2008"),
+        ],
+        "캐나다": [
+            ("이터널 선샤인", 2004, "로맨스", 108, 8.3, "미셸 공드리", "Eternal Sunshine of the Spotless Mind"),
+            ("아톤먼트", 2007, "로맨스", 123, 7.8, "조 라이트", "Atonement 2007"),
+        ],
+        "덴마크": [
+            ("더 헌트", 2012, "드라마", 115, 8.3, "토마스 빈터베르그", "The Hunt 2012"),
+            ("어나더 라운드", 2020, "드라마", 115, 7.7, "토마스 빈터베르그", "Another Round 2020"),
+            ("멜랑콜리아", 2011, "SF", 135, 7.1, "라스 폰 트리에", "Melancholia 2011"),
+        ],
+        "이란": [
+            ("씨민과 나데르의 별거", 2011, "드라마", 123, 8.3, "아스가르 파르하디", "A Separation 2011"),
+            ("세일즈맨", 2016, "드라마", 125, 7.8, "아스가르 파르하디", "The Salesman 2016"),
+            ("어바웃 엘리", 2009, "드라마", 119, 8.0, "아스가르 파르하디", "About Elly 2009"),
+        ],
+        "아르헨티나": [
+            ("비밀 속의 눈들", 2009, "스릴러", 127, 8.2, "후안 호세 캄파넬라", "The Secret in Their Eyes"),
+            ("와일드 테일즈", 2014, "코미디", 122, 8.1, "다미안 시프론", "Wild Tales 2014"),
         ],
     }
 
@@ -535,6 +791,8 @@ def 스타일적용(다크모드=True):
     card_bg = "#111827" if 다크모드 else "#ffffff"
     border = "#243041" if 다크모드 else "#d1d5db"
     sidebar_text = "#111827"
+    detail_bg = "#0d1520" if 다크모드 else "#f0f4fa"
+    detail_border = "#1e2d42" if 다크모드 else "#c8d0dc"
 
     st.markdown(
         f"""
@@ -669,6 +927,11 @@ def 스타일적용(다크모드=True):
             background:{card_bg};
             border:1px solid {border};
             box-shadow:0 12px 30px rgba(0,0,0,.18);
+            transition: transform .15s ease, box-shadow .15s ease;
+        }}
+        .movie-card:hover {{
+            transform: translateY(-3px);
+            box-shadow:0 20px 40px rgba(0,0,0,.28);
         }}
         .poster-wrap {{
             position:relative;
@@ -676,16 +939,16 @@ def 스타일적용(다크모드=True):
         }}
         .poster-img {{
             width:100%;
-            height:340px;
+            height:300px;
             object-fit:cover;
             display:block;
             background:#0f172a;
         }}
         .poster-top-badges {{
             position:absolute;
-            top:12px;
-            left:12px;
-            right:12px;
+            top:10px;
+            left:10px;
+            right:10px;
             display:flex;
             justify-content:space-between;
             align-items:flex-start;
@@ -694,105 +957,112 @@ def 스타일적용(다크모드=True):
         }}
         .poster-badge {{
             display:inline-block;
-            padding:6px 10px;
+            padding:5px 9px;
             border-radius:999px;
-            background:rgba(15,23,42,.75);
+            background:rgba(15,23,42,.80);
             color:#fff !important;
-            font-size:.75rem;
-            border:1px solid rgba(255,255,255,.10);
-        }}
-        .poster-hover {{
-            position:absolute;
-            inset:0;
-            opacity:0;
-            transition:.18s ease;
-            background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.72));
-            display:flex;
-            align-items:flex-end;
-            justify-content:flex-start;
-            padding:14px;
-            z-index:2;
-        }}
-        .movie-card:hover .poster-hover {{
-            opacity:1;
-        }}
-        .poster-hover-box {{
-            background:rgba(15,23,42,.82);
-            border:1px solid rgba(255,255,255,.10);
-            border-radius:14px;
-            padding:10px 12px;
-            color:#fff !important;
-            font-size:.82rem;
-            line-height:1.45;
-            max-width:92%;
+            font-size:.72rem;
+            border:1px solid rgba(255,255,255,.12);
         }}
         .card-info {{
-            padding:14px 14px 8px 14px;
+            padding:12px 14px 6px 14px;
         }}
         .card-title {{
-            font-size:1rem;
+            font-size:.97rem;
             font-weight:800;
-            line-height:1.35;
+            line-height:1.3;
             color:{main_text} !important;
-            margin-bottom:6px;
-            min-height:2.7em;
+            margin-bottom:4px;
+            min-height:2.5em;
         }}
         .card-meta {{
-            font-size:.84rem;
+            font-size:.78rem;
             color:{sub} !important;
-            margin-bottom:8px;
-            line-height:1.45;
+            margin-bottom:5px;
+            line-height:1.4;
         }}
         .card-summary {{
-            font-size:.83rem;
+            font-size:.77rem;
             color:{sub} !important;
-            line-height:1.5;
-            min-height:2.8em;
-            margin-bottom:8px;
+            line-height:1.45;
+            margin-bottom:6px;
         }}
-        .small-btn-wrap {{
-            margin-top: 4px;
-            margin-bottom: 4px;
-        }}
-        .detail-panel {{
-            background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78));
-            border:1px solid rgba(255,255,255,.08);
-            border-radius:26px;
-            padding:26px;
-        }}
-        .detail-head {{
-            font-size:1.5rem;
-            font-weight:800;
-            margin-bottom:8px;
-            color:#fff !important;
-        }}
-        .detail-meta {{
+        /* ── 카드 인라인 상세 패널 ── */
+        .card-detail-panel {{
+            background:{detail_bg};
+            border-top:1px solid {detail_border};
+            padding:10px 14px 12px 14px;
+            font-size:.75rem;
             color:{sub} !important;
-            font-size:.96rem;
-            margin-bottom:16px;
+            line-height:1.55;
         }}
-        .detail-grid {{
-            display:grid;
-            grid-template-columns:repeat(2, minmax(0, 1fr));
-            gap:12px;
-            margin-top:18px;
+        .card-detail-row {{
+            display:flex;
+            gap:6px;
+            margin-bottom:3px;
+            flex-wrap:wrap;
         }}
-        .detail-box {{
-            background:rgba(255,255,255,.04);
-            border:1px solid rgba(255,255,255,.06);
-            border-radius:18px;
-            padding:14px 16px;
+        .card-detail-label {{
+            color:#94a3b8 !important;
+            min-width:62px;
+            flex-shrink:0;
+            font-size:.70rem;
         }}
-        .detail-box-label {{
-            font-size:.78rem;
-            color:#cbd5e1 !important;
+        .card-detail-value {{
+            color:{main_text} !important;
+            font-size:.73rem;
+            flex:1;
+        }}
+        .card-detail-tags {{
+            display:flex;
+            flex-wrap:wrap;
+            gap:4px;
+            margin-top:6px;
+        }}
+        .card-mini-tag {{
+            padding:2px 7px;
+            border-radius:999px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.09);
+            color:{sub} !important;
+            font-size:.67rem;
+        }}
+        .card-ott-tag {{
+            padding:2px 7px;
+            border-radius:999px;
+            background:rgba(59,130,246,.15);
+            border:1px solid rgba(59,130,246,.25);
+            color:#93c5fd !important;
+            font-size:.67rem;
+        }}
+        .card-stat-row {{
+            display:flex;
+            gap:8px;
+            margin-top:7px;
             margin-bottom:5px;
         }}
-        .detail-box-value {{
-            font-size:.95rem;
-            color:#fff !important;
-            font-weight:600;
-            line-height:1.45;
+        .card-stat-box {{
+            flex:1;
+            background:rgba(255,255,255,.04);
+            border:1px solid rgba(255,255,255,.06);
+            border-radius:10px;
+            padding:5px 8px;
+            text-align:center;
+        }}
+        .card-stat-lbl {{
+            color:#64748b !important;
+            font-size:.62rem;
+            display:block;
+            margin-bottom:1px;
+        }}
+        .card-stat-val {{
+            color:{main_text} !important;
+            font-size:.74rem;
+            font-weight:700;
+        }}
+        .small-btn-wrap {{
+            margin-top:2px;
+            margin-bottom:4px;
         }}
         .rail-card {{
             background:{card_bg};
@@ -825,7 +1095,7 @@ def 스타일적용(다크모드=True):
     )
 
 
-def 카드HTML생성(row, tmdb_api_key):
+def 카드HTML생성(row, tmdb_api_key, show_detail=False):
     title = escape(str(row["영화명"]))
     country = escape(str(row["국가"]))
     genre = escape(str(row["장르"]))
@@ -834,93 +1104,102 @@ def 카드HTML생성(row, tmdb_api_key):
     rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
     one_liner = escape(str(row["한줄요약"]))
     age_rating = escape(str(row["연령등급"]))
-    ott_text = escape(목록문자열(태그분리(row["OTT"]), 2))
+    ott_list = 태그분리(row["OTT"])
+    director = escape(str(row["감독"]))
+    cast = escape(str(row["출연진"]))
+    synopsis = escape(str(row["줄거리"])[:120] + ("..." if len(str(row["줄거리"])) > 120 else ""))
+    emotion_tags = 태그분리(row["감정태그"])
+    situation_tags = 태그분리(row["상황태그"])
+    awards = escape(str(row["수상여부"]))
+    series = escape(str(row["시리즈"]))
+    audience = 숫자표시(row["관객수"])
+    gross = 금액표시(row["글로벌흥행액"])
+    review = escape(str(row["대표리뷰"])[:80] + ("..." if len(str(row["대표리뷰"])) > 80 else ""))
     poster = 포스터주소가져오기(row, tmdb_api_key)
 
-    hover_text = f"{genre} · {runtime} · ★ {rating}<br>{age_rating} · {ott_text}"
+    ott_tags_html = "".join([f"<span class='card-ott-tag'>{escape(o)}</span>" for o in ott_list[:3]])
+    emotion_tags_html = "".join([f"<span class='card-mini-tag'>{escape(t)}</span>" for t in emotion_tags[:3]])
+    situation_tags_html = "".join([f"<span class='card-mini-tag'>{escape(t)}</span>" for t in situation_tags[:2]])
+
+    detail_panel = ""
+    if show_detail:
+        detail_panel = f"""
+        <div class='card-detail-panel'>
+            <div class='card-detail-row'>
+                <span class='card-detail-label'>감독</span>
+                <span class='card-detail-value'>{director}</span>
+            </div>
+            <div class='card-detail-row'>
+                <span class='card-detail-label'>출연진</span>
+                <span class='card-detail-value'>{cast}</span>
+            </div>
+            <div class='card-detail-row'>
+                <span class='card-detail-label'>줄거리</span>
+                <span class='card-detail-value'>{synopsis}</span>
+            </div>
+            <div class='card-detail-row'>
+                <span class='card-detail-label'>수상</span>
+                <span class='card-detail-value'>{awards}</span>
+            </div>
+            {"<div class='card-detail-row'><span class='card-detail-label'>시리즈</span><span class='card-detail-value'>" + series + "</span></div>" if series.strip() else ""}
+            <div class='card-stat-row'>
+                <div class='card-stat-box'>
+                    <span class='card-stat-lbl'>관객수</span>
+                    <span class='card-stat-val'>{audience}</span>
+                </div>
+                <div class='card-stat-box'>
+                    <span class='card-stat-lbl'>흥행액</span>
+                    <span class='card-stat-val'>{gross}</span>
+                </div>
+                <div class='card-stat-box'>
+                    <span class='card-stat-lbl'>연령</span>
+                    <span class='card-stat-val'>{age_rating}</span>
+                </div>
+            </div>
+            <div class='card-detail-tags'>
+                {emotion_tags_html}
+                {situation_tags_html}
+            </div>
+            <div class='card-detail-tags' style='margin-top:4px;'>
+                {ott_tags_html}
+            </div>
+            <div style='margin-top:7px; font-size:.70rem; color:#94a3b8; font-style:italic;'>"{review}"</div>
+        </div>
+        """
 
     return f"""
     <div class='movie-card'>
         <div class='poster-wrap'>
-            <img src='{escape(poster, quote=True)}' class='poster-img' alt='{title} 포스터'>
+            <img src='{escape(poster, quote=True)}' class='poster-img' alt='{title} 포스터' loading='lazy'>
             <div class='poster-top-badges'>
                 <span class='poster-badge'>{genre}</span>
                 <span class='poster-badge'>★ {rating}</span>
             </div>
-            <div class='poster-hover'>
-                <div class='poster-hover-box'>
-                    {hover_text}
-                </div>
-            </div>
         </div>
         <div class='card-info'>
             <div class='card-title'>{title}</div>
-            <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
+            <div class='card-meta'>{country} · {year} · {runtime}</div>
             <div class='card-summary'>{one_liner}</div>
         </div>
+        {detail_panel}
     </div>
     """
 
 
-@st.dialog("영화 상세 정보", width="large")
-def 영화상세팝업(row, tmdb_api_key):
-    title = str(row["영화명"])
-
-    top1, top2 = st.columns([1, 1.5])
-    with top1:
-        st.image(포스터주소가져오기(row, tmdb_api_key), use_container_width=True)
-        st.link_button("▶ 예고편 보기", str(row["예고편URL"]), use_container_width=True)
-
-    with top2:
-        st.subheader(title)
-        st.write(f"**한 줄 요약:** {row['한줄요약']}")
-        st.write(f"**짧은 소개:** {row['짧은소개']}")
-        st.write(f"**줄거리:** {row['줄거리']}")
-        st.write(f"**감독:** {row['감독']}")
-        st.write(f"**출연진:** {row['출연진']}")
-        st.write(f"**연령등급:** {row['연령등급']}")
-        st.write(f"**장르 / 세부장르:** {row['장르']} / {row['세부장르']}")
-        st.write(f"**OTT:** {row['OTT']}")
-        st.write(f"**시리즈 / 세계관:** {row['시리즈'] if str(row['시리즈']).strip() else '-'}")
-        st.write(f"**수상 여부:** {row['수상여부']}")
-        st.write(f"**대표 리뷰:** {row['대표리뷰']}")
-
-    s1, s2, s3, s4 = st.columns(4)
-    s1.metric("평점", f"★ {('-' if pd.isna(row['평점']) else round(float(row['평점']), 1))}")
-    s2.metric("관객수", 숫자표시(row["관객수"]))
-    s3.metric("글로벌 흥행액", 금액표시(row["글로벌흥행액"]))
-    s4.metric("러닝타임", "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분")
-
-    st.write(f"**감정 태그:** {목록문자열(태그분리(row['감정태그']))}")
-    st.write(f"**상황 태그:** {목록문자열(태그분리(row['상황태그']))}")
-    st.write(f"**특징 태그:** {목록문자열(태그분리(row['특징태그']))}")
-    st.write(f"**해시태그:** {목록문자열(태그분리(row['해시태그']))}")
-
-    user_score = st.slider("내 평점", 0.0, 10.0, float(st.session_state["user_rating"].get(title, 8.0)), 0.5, key=f"dialog_score_{title}")
-    user_review = st.text_area("내 한 줄 리뷰", value=st.session_state["user_review"].get(title, ""), height=90, key=f"dialog_review_{title}")
-
-    b1, b2, b3, b4 = st.columns(4)
-    with b1:
-        if st.button("🤍 찜하기 / 해제", use_container_width=True, key=f"wish_{title}"):
-            리스트토글("wishlist", title)
-    with b2:
-        if st.button("✅ 본 영화", use_container_width=True, key=f"watched_{title}"):
-            리스트토글("watched", title)
-    with b3:
-        if st.button("🔁 다시 보기", use_container_width=True, key=f"rewatch_{title}"):
-            리스트토글("rewatch", title)
-    with b4:
-        if st.button("💾 내 평가 저장", use_container_width=True, key=f"save_{title}"):
-            st.session_state["user_rating"][title] = user_score
-            st.session_state["user_review"][title] = user_review
-            st.success("저장되었습니다.")
-
-
 def 카드UI(row, tmdb_api_key):
-    st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
+    title = str(row["영화명"])
+    detail_key = f"show_detail_{title}"
+    if detail_key not in st.session_state:
+        st.session_state[detail_key] = False
+
+    show_detail = st.session_state[detail_key]
+    st.markdown(카드HTML생성(row, tmdb_api_key, show_detail=show_detail), unsafe_allow_html=True)
+
     st.markdown("<div class='small-btn-wrap'>", unsafe_allow_html=True)
-    if st.button("상세보기", key=f"detail_{row['영화명']}", use_container_width=True):
-        영화상세팝업(row, tmdb_api_key)
+    btn_label = "▲ 접기" if show_detail else "▼ 상세보기"
+    if st.button(btn_label, key=f"detail_toggle_{title}", use_container_width=True):
+        st.session_state[detail_key] = not show_detail
+        st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -1113,7 +1392,7 @@ def 메인():
     page_df = filtered.iloc[시작:끝].copy()
 
     st.markdown("<div class='section-title'>지금 많이 보는 영화</div>", unsafe_allow_html=True)
-    cols_per_row = 5
+    cols_per_row = 4
     for start in range(0, len(page_df), cols_per_row):
         chunk = page_df.iloc[start:start + cols_per_row]
         cols = st.columns(cols_per_row)
