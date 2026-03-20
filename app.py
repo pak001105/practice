@@ -523,76 +523,44 @@ def 포스터주소가져오기(row, tmdb_api_key):
     return 대체포스터생성(row.get("영화명", ""), row.get("장르", ""), row.get("개봉연도", None))
 
 
-def 스타일적용(다크모드=True):
-    bg = "#070b14" if 다크모드 else "#f4f6fb"
-    main_text = "#ffffff" if 다크모드 else "#111827"
-    sub = "#cbd5e1" if 다크모드 else "#4b5563"
-    card_bg = "#111827" if 다크모드 else "#ffffff"
-    border = "#243041" if 다크모드 else "#e5e7eb"
-    sidebar_text = "#111827"
+def 카드HTML생성(row, tmdb_api_key):
+    title = escape(str(row["영화명"]))
+    country = escape(str(row["국가"]))
+    genre = escape(str(row["장르"]))
+    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
+    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
+    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
+    one_liner = escape(str(row["한줄요약"]))
+    age_rating = escape(str(row["연령등급"]))
+    ott_text = escape(목록문자열(태그분리(row["OTT"]), 2))
+    poster = 포스터주소가져오기(row, tmdb_api_key)
 
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background:
-                radial-gradient(circle at top right, rgba(59,130,246,.12), transparent 28%),
-                radial-gradient(circle at top left, rgba(236,72,153,.10), transparent 24%),
-                {bg};
-            color: {main_text};
-        }}
-        .block-container {{ max-width: 1480px; padding-top: 1rem; padding-bottom: 2rem; }}
-        section.main h1, section.main h2, section.main h3, section.main h4,
-        section.main p, section.main label, section.main div, section.main span {{ color: {main_text}; }}
-        .stMarkdown, .stCaption {{ color: {main_text} !important; }}
-        section[data-testid="stSidebar"] * {{ color: {sidebar_text} !important; }}
-        section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textarea {{
-            color: {sidebar_text} !important;
-            -webkit-text-fill-color: {sidebar_text} !important;
-        }}
-        .hero-wrap {{
-            position: relative; min-height: 430px; border-radius: 28px; overflow: hidden; margin-bottom: 24px;
-            border: 1px solid rgba(255,255,255,.08); box-shadow: 0 20px 60px rgba(0,0,0,.35); background: #0f172a;
-        }}
-        .hero-bg {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }}
-        .hero-overlay {{ position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3,7,18,.94) 0%, rgba(3,7,18,.65) 45%, rgba(3,7,18,.20) 100%); }}
-        .hero-content {{ position: relative; z-index: 2; padding: 38px; max-width: 760px; }}
-        .hero-badge {{ display:inline-block; padding:7px 14px; border-radius:999px; background:rgba(255,255,255,.12); color:#fff; font-size:.82rem; margin-bottom:14px; }}
-        .hero-title {{ font-size:2.8rem; font-weight:800; line-height:1.05; margin-bottom:12px; color:#fff; }}
-        .hero-meta {{ font-size:.96rem; color:#dbe4f0; margin-bottom:14px; }}
-        .hero-desc {{ font-size:1rem; color:#d4dbe5; line-height:1.7; margin-bottom:14px; }}
-        .chip-row {{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }}
-        .chip {{ padding:8px 14px; border-radius:999px; background:rgba(255,255,255,.09); color:#fff; font-size:.85rem; border:1px solid rgba(255,255,255,.10); }}
-        .hero-stats {{ display:flex; gap:12px; flex-wrap:wrap; }}
-        .hero-stat {{ min-width:120px; padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); }}
-        .hero-stat-label {{ color:#d1d5db; font-size:.78rem; margin-bottom:4px; }}
-        .hero-stat-value {{ color:#fff; font-size:1.05rem; font-weight:700; }}
-        .section-title {{ font-size:1.22rem; font-weight:800; margin:8px 0 16px 0; }}
-        .movie-card {{ position:relative; border-radius:22px; overflow:hidden; margin-bottom:18px; background:{card_bg}; border:1px solid {border}; box-shadow:0 12px 30px rgba(0,0,0,.18); }}
-        .poster-wrap {{ position:relative; }}
-        .poster-img {{ width:100%; height:350px; object-fit:cover; display:block; background:#0f172a; }}
-        .card-gradient {{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.82)); }}
-        .card-hover {{ position:absolute; inset:0; opacity:0; transition:.18s ease; background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.92)); color:#fff; padding:16px; display:flex; flex-direction:column; justify-content:flex-end; font-size:.9rem; }}
-        .movie-card:hover .card-hover {{ opacity:1; }}
-        .card-bottom {{ position:absolute; left:0; right:0; bottom:0; padding:16px; z-index:2; }}
-        .card-title {{ font-size:1rem; font-weight:700; color:#fff; margin-bottom:6px; line-height:1.3; }}
-        .card-sub {{ font-size:.84rem; color:#dbe3ee; }}
-        .detail-panel {{ background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78)); border:1px solid rgba(255,255,255,.08); border-radius:26px; padding:26px; }}
-        .detail-head {{ font-size:1.5rem; font-weight:800; margin-bottom:8px; }}
-        .detail-meta {{ color:{sub}; font-size:.96rem; margin-bottom:16px; }}
-        .detail-grid {{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:18px; }}
-        .detail-box {{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:14px 16px; }}
-        .detail-box-label {{ font-size:.78rem; color:#cbd5e1; margin-bottom:5px; }}
-        .detail-box-value {{ font-size:.95rem; color:#fff; font-weight:600; line-height:1.45; }}
-        .rail-card {{ background:{card_bg}; border:1px solid {border}; border-radius:18px; padding:14px 16px; margin-bottom:12px; }}
-        .rail-title {{ font-size:.98rem; font-weight:700; margin-bottom:5px; color:{main_text}; }}
-        .rail-sub {{ font-size:.84rem; color:{sub}; line-height:1.5; }}
-        .page-box {{ padding:12px 14px; border-radius:18px; border:1px solid {border}; background:rgba(17,24,39,.65); margin-bottom:20px; }}
-        [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{ color:{main_text} !important; }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    hover_text = f"{genre} · {runtime} · ★ {rating}<br>{age_rating} · {ott_text}"
+
+    return f"""
+    <div class='movie-card'>
+        <div class='poster-wrap'>
+            <img src='{포스터주소_html(poster)}' class='poster-img' alt='{title} 포스터'>
+
+            <div class='poster-top-badges'>
+                <span class='poster-badge'>{genre}</span>
+                <span class='poster-badge'>★ {rating}</span>
+            </div>
+
+            <div class='poster-hover'>
+                <div class='poster-hover-box'>
+                    {hover_text}
+                </div>
+            </div>
+        </div>
+
+        <div class='card-info'>
+            <div class='card-title'>{title}</div>
+            <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
+            <div class='card-summary'>{one_liner}</div>
+        </div>
+    </div>
+    """
 
 
 def 포스터주소_html(url):
