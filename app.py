@@ -1468,11 +1468,13 @@ def 영화팝업(row, tmdb_api_key):
     gross = 금액표시(row["글로벌흥행액"])
     trailer_url = str(row["예고편URL"])
 
-    # 팝업 전체를 단일 HTML 블록으로 렌더링 — 오른쪽 정보 영역만 스크롤
-    tags_html = "".join([f"<span class='etag'>{escape(t)}</span>" for t in emotion_tags])
-    tags_html += "".join([f"<span class='ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags])
-    ott_html = "".join([f"<span class='otag'>{escape(o)}</span>" for o in ott_list]) or "-"
-    series_row = f"<div class='info-badge'>📺 {escape(series)}</div>" if series.strip() else ""
+    # ── 태그/OTT HTML을 f-string 밖에서 미리 조립 (f-string 안 중첩 방지) ──
+    etag_html  = "".join(f"<span class='p-etag'>{escape(t)}</span>" for t in emotion_tags)
+    ptag_html  = "".join(f"<span class='p-ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags)
+    otag_html  = "".join(f"<span class='p-otag'>&#9654; {escape(o)}</span>" for o in ott_list)
+    if not otag_html:
+        otag_html = "<span style='color:#94a3b8;font-size:.78rem'>정보 없음</span>"
+    series_row = f"<div class='p-series'>&#128250; {escape(series)}</div>" if series.strip() else ""
 
     st.markdown(f"""
     <style>
@@ -1738,14 +1740,14 @@ def 영화팝업(row, tmdb_api_key):
             <!-- 태그 -->
             <div class="p-sec">감정 · 상황 · 특징 태그</div>
             <div class="p-tags">
-                {"".join([f"<span class='p-etag'>{escape(t)}</span>" for t in emotion_tags])}
-                {"".join([f"<span class='p-ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags])}
+                {etag_html}
+                {ptag_html}
             </div>
 
             <!-- OTT -->
             <div class="p-sec">OTT 플랫폼</div>
             <div class="p-tags">
-                {"".join([f"<span class='p-otag'>▶ {escape(o)}</span>" for o in ott_list]) or "<span style='color:#94a3b8;font-size:.78rem'>정보 없음</span>"}
+                {otag_html}
             </div>
 
             <!-- 리뷰 -->
