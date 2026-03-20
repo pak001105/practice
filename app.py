@@ -810,10 +810,20 @@ def 스타일적용(다크모드=True):
             padding-bottom: 2rem;
         }}
         h1, h2, h3, h4, h5, h6, p, label, div, span,
-        .stMarkdown, .stCaption, [data-testid="stMetricValue"],
-        [data-testid="stMetricLabel"], [data-testid="stExpander"] * {{
+        .stMarkdown, .stCaption, [data-testid="stExpander"] * {{
             color: {main_text} !important;
             opacity: 1 !important;
+        }}
+        [data-testid="stMetricValue"],
+        [data-testid="stMetricLabel"],
+        [data-testid="stMetric"] * {{
+            color: #111827 !important;
+        }}
+        [data-baseweb="input"] input,
+        [data-baseweb="select"] *,
+        [data-baseweb="textarea"] textarea {{
+            color: #111827 !important;
+            -webkit-text-fill-color: #111827 !important;
         }}
         section[data-testid="stSidebar"] * {{
             color: {sidebar_text} !important;
@@ -1095,7 +1105,7 @@ def 스타일적용(다크모드=True):
     )
 
 
-def 카드HTML생성(row, tmdb_api_key, show_detail=False):
+def 카드HTML생성(row, tmdb_api_key):
     title = escape(str(row["영화명"]))
     country = escape(str(row["국가"]))
     genre = escape(str(row["장르"]))
@@ -1103,69 +1113,7 @@ def 카드HTML생성(row, tmdb_api_key, show_detail=False):
     runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
     rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
     one_liner = escape(str(row["한줄요약"]))
-    age_rating = escape(str(row["연령등급"]))
-    ott_list = 태그분리(row["OTT"])
-    director = escape(str(row["감독"]))
-    cast = escape(str(row["출연진"]))
-    synopsis = escape(str(row["줄거리"])[:120] + ("..." if len(str(row["줄거리"])) > 120 else ""))
-    emotion_tags = 태그분리(row["감정태그"])
-    situation_tags = 태그분리(row["상황태그"])
-    awards = escape(str(row["수상여부"]))
-    series = escape(str(row["시리즈"]))
-    audience = 숫자표시(row["관객수"])
-    gross = 금액표시(row["글로벌흥행액"])
-    review = escape(str(row["대표리뷰"])[:80] + ("..." if len(str(row["대표리뷰"])) > 80 else ""))
     poster = 포스터주소가져오기(row, tmdb_api_key)
-
-    ott_tags_html = "".join([f"<span class='card-ott-tag'>{escape(o)}</span>" for o in ott_list[:3]])
-    emotion_tags_html = "".join([f"<span class='card-mini-tag'>{escape(t)}</span>" for t in emotion_tags[:3]])
-    situation_tags_html = "".join([f"<span class='card-mini-tag'>{escape(t)}</span>" for t in situation_tags[:2]])
-
-    detail_panel = ""
-    if show_detail:
-        detail_panel = f"""
-        <div class='card-detail-panel'>
-            <div class='card-detail-row'>
-                <span class='card-detail-label'>감독</span>
-                <span class='card-detail-value'>{director}</span>
-            </div>
-            <div class='card-detail-row'>
-                <span class='card-detail-label'>출연진</span>
-                <span class='card-detail-value'>{cast}</span>
-            </div>
-            <div class='card-detail-row'>
-                <span class='card-detail-label'>줄거리</span>
-                <span class='card-detail-value'>{synopsis}</span>
-            </div>
-            <div class='card-detail-row'>
-                <span class='card-detail-label'>수상</span>
-                <span class='card-detail-value'>{awards}</span>
-            </div>
-            {"<div class='card-detail-row'><span class='card-detail-label'>시리즈</span><span class='card-detail-value'>" + series + "</span></div>" if series.strip() else ""}
-            <div class='card-stat-row'>
-                <div class='card-stat-box'>
-                    <span class='card-stat-lbl'>관객수</span>
-                    <span class='card-stat-val'>{audience}</span>
-                </div>
-                <div class='card-stat-box'>
-                    <span class='card-stat-lbl'>흥행액</span>
-                    <span class='card-stat-val'>{gross}</span>
-                </div>
-                <div class='card-stat-box'>
-                    <span class='card-stat-lbl'>연령</span>
-                    <span class='card-stat-val'>{age_rating}</span>
-                </div>
-            </div>
-            <div class='card-detail-tags'>
-                {emotion_tags_html}
-                {situation_tags_html}
-            </div>
-            <div class='card-detail-tags' style='margin-top:4px;'>
-                {ott_tags_html}
-            </div>
-            <div style='margin-top:7px; font-size:.70rem; color:#94a3b8; font-style:italic;'>"{review}"</div>
-        </div>
-        """
 
     return f"""
     <div class='movie-card'>
@@ -1181,25 +1129,190 @@ def 카드HTML생성(row, tmdb_api_key, show_detail=False):
             <div class='card-meta'>{country} · {year} · {runtime}</div>
             <div class='card-summary'>{one_liner}</div>
         </div>
-        {detail_panel}
     </div>
     """
 
 
-def 카드UI(row, tmdb_api_key):
+@st.dialog("🎬 영화 상세 정보", width="large")
+def 영화팝업(row, tmdb_api_key):
+    poster = 포스터주소가져오기(row, tmdb_api_key)
     title = str(row["영화명"])
-    detail_key = f"show_detail_{title}"
-    if detail_key not in st.session_state:
-        st.session_state[detail_key] = False
+    country = str(row["국가"])
+    genre = str(row["장르"])
+    subgenre = str(row["세부장르"])
+    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
+    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
+    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
+    director = str(row["감독"])
+    cast = str(row["출연진"])
+    age_rating = str(row["연령등급"])
+    one_liner = str(row["한줄요약"])
+    short_desc = str(row["짧은소개"])
+    synopsis = str(row["줄거리"])
+    awards = str(row["수상여부"])
+    series = str(row["시리즈"])
+    review = str(row["대표리뷰"])
+    ott_list = 태그분리(row["OTT"])
+    emotion_tags = 태그분리(row["감정태그"])
+    situation_tags = 태그분리(row["상황태그"])
+    feature_tags = 태그분리(row["특징태그"])
+    hashtags = 태그분리(row["해시태그"])
+    audience = 숫자표시(row["관객수"])
+    gross = 금액표시(row["글로벌흥행액"])
+    trailer_url = str(row["예고편URL"])
 
-    show_detail = st.session_state[detail_key]
-    st.markdown(카드HTML생성(row, tmdb_api_key, show_detail=show_detail), unsafe_allow_html=True)
+    # 팝업 내부 스타일
+    st.markdown("""
+    <style>
+    [data-testid="stDialog"] * { color: #111 !important; }
+    [data-testid="stDialog"] .popup-poster { border-radius:16px; overflow:hidden; }
+    [data-testid="stDialog"] .popup-tag {
+        display:inline-block; padding:3px 10px; border-radius:999px;
+        background:#e8f0fe; color:#1a56db !important; font-size:.78rem;
+        margin:2px; border:1px solid #c7d7fc;
+    }
+    [data-testid="stDialog"] .popup-ott-tag {
+        display:inline-block; padding:3px 10px; border-radius:999px;
+        background:#fef3c7; color:#92400e !important; font-size:.78rem;
+        margin:2px; border:1px solid #fde68a;
+    }
+    [data-testid="stDialog"] .popup-emotion-tag {
+        display:inline-block; padding:3px 10px; border-radius:999px;
+        background:#f0fdf4; color:#166534 !important; font-size:.78rem;
+        margin:2px; border:1px solid #bbf7d0;
+    }
+    [data-testid="stDialog"] .popup-stat-box {
+        background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px;
+        padding:10px 14px; text-align:center;
+    }
+    [data-testid="stDialog"] .popup-stat-lbl {
+        color:#64748b !important; font-size:.72rem; display:block; margin-bottom:2px;
+    }
+    [data-testid="stDialog"] .popup-stat-val {
+        color:#0f172a !important; font-size:1rem; font-weight:700;
+    }
+    [data-testid="stDialog"] .popup-section-title {
+        font-size:.78rem; color:#64748b !important; font-weight:600;
+        text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; margin-top:12px;
+    }
+    [data-testid="stDialog"] .popup-synopsis {
+        background:#f8fafc; border-left:3px solid #3b82f6;
+        padding:10px 14px; border-radius:0 10px 10px 0;
+        font-size:.88rem; color:#1e293b !important; line-height:1.7;
+    }
+    [data-testid="stDialog"] .popup-review {
+        background:#fffbeb; border:1px solid #fde68a;
+        padding:10px 14px; border-radius:12px;
+        font-size:.85rem; color:#78350f !important;
+        font-style:italic; line-height:1.6;
+    }
+    [data-testid="stDialog"] .popup-info-row {
+        display:flex; gap:6px; align-items:flex-start; margin-bottom:6px;
+    }
+    [data-testid="stDialog"] .popup-info-label {
+        color:#64748b !important; font-size:.78rem; min-width:60px; flex-shrink:0; padding-top:1px;
+    }
+    [data-testid="stDialog"] .popup-info-value {
+        color:#1e293b !important; font-size:.85rem; flex:1; line-height:1.5;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
+    col_poster, col_info = st.columns([1, 1.8])
+
+    with col_poster:
+        st.image(poster, use_container_width=True)
+        st.link_button("▶ 예고편 검색", trailer_url, use_container_width=True)
+
+        # 찜/본 영화 버튼
+        b1, b2 = st.columns(2)
+        with b1:
+            in_wish = title in st.session_state["wishlist"]
+            if st.button("🤍 찜" if not in_wish else "❤️ 찜됨", use_container_width=True, key=f"pop_wish_{title}"):
+                리스트토글("wishlist", title)
+                st.rerun()
+        with b2:
+            in_watched = title in st.session_state["watched"]
+            if st.button("✅ 봤어요" if not in_watched else "✅ 봄", use_container_width=True, key=f"pop_watched_{title}"):
+                리스트토글("watched", title)
+                st.rerun()
+
+    with col_info:
+        # 제목 & 기본 메타
+        st.markdown(f"### {title}")
+        st.markdown(f"**{country}** · {year} · {runtime} · {age_rating} · ★ **{rating}**")
+
+        if series.strip():
+            st.markdown(f"📺 시리즈: **{series}**")
+
+        # 한줄 요약
+        st.markdown(f"_{one_liner}_")
+        st.divider()
+
+        # 통계 박스
+        s1, s2, s3 = st.columns(3)
+        s1.markdown(f"<div class='popup-stat-box'><span class='popup-stat-lbl'>평점</span><span class='popup-stat-val'>★ {rating}</span></div>", unsafe_allow_html=True)
+        s2.markdown(f"<div class='popup-stat-box'><span class='popup-stat-lbl'>관객수</span><span class='popup-stat-val'>{audience}</span></div>", unsafe_allow_html=True)
+        s3.markdown(f"<div class='popup-stat-box'><span class='popup-stat-lbl'>흥행액</span><span class='popup-stat-val'>{gross}</span></div>", unsafe_allow_html=True)
+
+        # 기본 정보
+        st.markdown("<div class='popup-section-title'>기본 정보</div>", unsafe_allow_html=True)
+        info_rows = [
+            ("장르", f"{genre} / {subgenre}"),
+            ("감독", director),
+            ("출연진", cast),
+            ("수상", awards),
+        ]
+        for lbl, val in info_rows:
+            st.markdown(f"<div class='popup-info-row'><span class='popup-info-label'>{lbl}</span><span class='popup-info-value'>{escape(val)}</span></div>", unsafe_allow_html=True)
+
+        # 짧은 소개
+        st.markdown("<div class='popup-section-title'>소개</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='popup-synopsis'>{escape(short_desc)}</div>", unsafe_allow_html=True)
+
+        # 줄거리
+        st.markdown("<div class='popup-section-title'>줄거리</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='popup-synopsis'>{escape(synopsis)}</div>", unsafe_allow_html=True)
+
+        # 태그들
+        st.markdown("<div class='popup-section-title'>감정 · 상황 태그</div>", unsafe_allow_html=True)
+        tag_html = "".join([f"<span class='popup-emotion-tag'>{escape(t)}</span>" for t in emotion_tags])
+        tag_html += "".join([f"<span class='popup-tag'>{escape(t)}</span>" for t in situation_tags])
+        tag_html += "".join([f"<span class='popup-tag'>{escape(t)}</span>" for t in feature_tags])
+        st.markdown(tag_html, unsafe_allow_html=True)
+
+        # OTT
+        st.markdown("<div class='popup-section-title'>OTT 플랫폼</div>", unsafe_allow_html=True)
+        ott_html = "".join([f"<span class='popup-ott-tag'>{escape(o)}</span>" for o in ott_list])
+        st.markdown(ott_html if ott_html else "-", unsafe_allow_html=True)
+
+        # 해시태그
+        st.markdown("<div class='popup-section-title'>해시태그</div>", unsafe_allow_html=True)
+        hash_html = "".join([f"<span class='popup-tag'>#{escape(h)}</span>" for h in hashtags])
+        st.markdown(hash_html if hash_html else "-", unsafe_allow_html=True)
+
+        # 대표 리뷰
+        st.markdown("<div class='popup-section-title'>대표 리뷰</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='popup-review'>💬 {escape(review)}</div>", unsafe_allow_html=True)
+
+        # 내 평가
+        st.markdown("<div class='popup-section-title'>내 평가</div>", unsafe_allow_html=True)
+        user_score = st.slider("내 평점", 0.0, 10.0,
+                               float(st.session_state["user_rating"].get(title, 8.0)),
+                               0.5, key=f"pop_score_{title}")
+        user_review_text = st.text_area("한 줄 리뷰", value=st.session_state["user_review"].get(title, ""),
+                                        height=70, key=f"pop_review_{title}")
+        if st.button("💾 내 평가 저장", use_container_width=True, key=f"pop_save_{title}"):
+            st.session_state["user_rating"][title] = user_score
+            st.session_state["user_review"][title] = user_review_text
+            st.success("저장되었습니다!")
+
+
+def 카드UI(row, tmdb_api_key):
+    st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
     st.markdown("<div class='small-btn-wrap'>", unsafe_allow_html=True)
-    btn_label = "▲ 접기" if show_detail else "▼ 상세보기"
-    if st.button(btn_label, key=f"detail_toggle_{title}", use_container_width=True):
-        st.session_state[detail_key] = not show_detail
-        st.rerun()
+    if st.button("상세보기", key=f"popup_btn_{row['영화명']}", use_container_width=True):
+        영화팝업(row, tmdb_api_key)
     st.markdown("</div>", unsafe_allow_html=True)
 
 
