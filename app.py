@@ -2,7 +2,7 @@ import math
 import base64
 from pathlib import Path
 from html import escape
-from typing import Optional, List, Dict
+from typing import Optional
 
 import pandas as pd
 import requests
@@ -17,37 +17,37 @@ DEFAULT_FILES = [
 ]
 
 사용가능국가 = ["미국", "한국", "영국", "스페인", "인도", "일본", "중국", "대만"]
+시대순서 = ["1990년대 이전", "1990년대", "2000년대", "2010년대", "2020년대", "시대 미상"]
 
 COLUMN_ALIASES = {
-    "영화명": ["영화명", "title", "movie_title"],
-    "개봉연도": ["개봉연도", "year", "release_year"],
-    "시대구분": ["시대구분", "decade", "era"],
-    "국가": ["국가", "country", "nation"],
+    "영화명": ["영화명", "title"],
+    "개봉연도": ["개봉연도", "year"],
+    "시대구분": ["시대구분", "decade"],
+    "국가": ["국가", "country"],
     "장르": ["장르", "genre"],
     "세부장르": ["세부장르", "subgenre"],
-    "상영시간": ["상영시간", "runtime_min", "runtime", "상영시간(분)"],
-    "관객수": ["관객수", "audience", "audience_count"],
-    "글로벌흥행액": ["글로벌흥행액", "worldwide_gross", "global_box_office"],
-    "평점": ["평점", "rating", "score"],
+    "상영시간": ["상영시간", "runtime"],
+    "관객수": ["관객수", "audience"],
+    "글로벌흥행액": ["글로벌흥행액", "worldwide_gross"],
+    "평점": ["평점", "rating"],
     "감독": ["감독", "director"],
     "출연진": ["출연진", "cast"],
     "연령등급": ["연령등급", "age_rating"],
     "한줄요약": ["한줄요약", "summary_short"],
     "짧은소개": ["짧은소개", "short_description"],
     "줄거리": ["줄거리", "synopsis"],
-    "감정태그": ["감정태그", "emotion_tags", "mood_tags"],
-    "상황태그": ["상황태그", "situation_tags", "context_tags"],
-    "특징태그": ["특징태그", "feature_tags", "special_tags"],
+    "감정태그": ["감정태그", "emotion_tags"],
+    "상황태그": ["상황태그", "situation_tags"],
+    "특징태그": ["특징태그", "feature_tags"],
     "해시태그": ["해시태그", "hashtags"],
     "시리즈": ["시리즈", "series_name"],
     "OTT": ["OTT", "ott_platforms"],
     "예고편URL": ["예고편URL", "trailer_url"],
-    "포스터URL": ["포스터URL", "poster_url", "poster", "poster_image_url"],
-    "포스터검색어": ["포스터검색어", "poster_query", "poster_search_query"],
+    "포스터URL": ["포스터URL", "poster_url"],
+    "포스터검색어": ["포스터검색어", "poster_query"],
 }
 
 표시컬럼 = list(COLUMN_ALIASES.keys())
-시대순서 = ["1990년대 이전", "1990년대", "2000년대", "2010년대", "2020년대", "시대 미상"]
 
 
 def 기존파일찾기():
@@ -81,6 +81,14 @@ def 태그분리(text):
     return [t.strip() for t in text.split(",") if t.strip()]
 
 
+def 목록문자열(items, limit=None):
+    if not items:
+        return "-"
+    if limit is not None:
+        items = items[:limit]
+    return ", ".join(items)
+
+
 def 모든태그포함여부(text, selected_tags):
     tag_set = {t.lower() for t in 태그분리(text)}
     return all(tag.lower() in tag_set for tag in selected_tags)
@@ -102,14 +110,6 @@ def 금액표시(value):
         return f"${int(value):,}"
     except Exception:
         return "-"
-
-
-def 목록문자열(items: List[str], limit: Optional[int] = None):
-    if not items:
-        return "-"
-    if limit is not None:
-        items = items[:limit]
-    return ", ".join(items)
 
 
 def 러닝타임구간(분):
@@ -200,15 +200,18 @@ def 장르프로필(장르):
             "ott": "넷플릭스,디즈니플러스,애플TV+",
         },
     }
-    return mapping.get(장르, {
-        "감정": "몰입,감상",
-        "상황": "혼자,주말",
-        "특징": "영화,스토리",
-        "해시태그": "영화,추천",
-        "세부장르": "일반",
-        "연령등급": "12세 이상",
-        "ott": "넷플릭스",
-    })
+    return mapping.get(
+        장르,
+        {
+            "감정": "몰입,감상",
+            "상황": "혼자,주말",
+            "특징": "영화,스토리",
+            "해시태그": "영화,추천",
+            "세부장르": "일반",
+            "연령등급": "12세 이상",
+            "ott": "넷플릭스",
+        },
+    )
 
 
 def 시리즈추출(영화명):
@@ -232,13 +235,13 @@ def 시리즈추출(영화명):
 def 출연진생성(국가, 장르, idx):
     pools = {
         "한국": ["송강호", "황정민", "이병헌", "전지현", "정우성", "박정민", "마동석", "김혜수"],
-        "미국": ["레오나르도 디카프리오", "톰 크루즈", "로버트 다우니 주니어", "엠마 스톤", "라이언 고슬링", "크리스 에반스", "제시카 차스테인", "스칼릿 조핸슨"],
-        "영국": ["콜린 퍼스", "에디 레드메인", "휴 그랜트", "케이라 나이틀리", "대니얼 크레이그", "헨리 카빌", "톰 하디", "엠마 톰슨"],
-        "스페인": ["하비에르 바르뎀", "페넬로페 크루즈", "벨렌 루에다", "마리오 카사스", "에두아르드 페르난데스"],
-        "인도": ["아미르 칸", "샤룩 칸", "란비르 카푸르", "디피카 파두콘", "알리아 바트", "프리얀카 초프라"],
-        "일본": ["기무라 타쿠야", "히로세 스즈", "아라가키 유이", "야마자키 켄토", "나가사와 마사미"],
-        "중국": ["이연걸", "장쯔이", "공리", "주윤발", "주성치", "류이페이"],
-        "대만": ["계륜미", "천이한", "진의함", "왕대륙", "가진동", "주걸륜"],
+        "미국": ["레오나르도 디카프리오", "톰 크루즈", "로버트 다우니 주니어", "엠마 스톤", "라이언 고슬링", "크리스 에반스"],
+        "영국": ["콜린 퍼스", "에디 레드메인", "휴 그랜트", "케이라 나이틀리", "대니얼 크레이그"],
+        "스페인": ["하비에르 바르뎀", "페넬로페 크루즈", "벨렌 루에다", "마리오 카사스"],
+        "인도": ["아미르 칸", "샤룩 칸", "란비르 카푸르", "디피카 파두콘", "알리아 바트"],
+        "일본": ["기무라 타쿠야", "히로세 스즈", "아라가키 유이", "야마자키 켄토"],
+        "중국": ["이연걸", "장쯔이", "공리", "주윤발", "주성치"],
+        "대만": ["계륜미", "천이한", "왕대륙", "가진동", "주걸륜"],
     }
     base = pools.get(국가, ["배우A", "배우B", "배우C"])
     a = base[idx % len(base)]
@@ -253,7 +256,7 @@ def 한줄요약생성(장르, 특징태그):
     특징 = 태그분리(특징태그)
     핵심 = 특징[0] if 특징 else "몰입감"
     mapping = {
-        "액션": f"{핵심}이 강한 통쾌한 액션 엔터테이너",
+        "액션": f"{핵심}이 강한 통쾌한 액션 영화",
         "드라마": f"{핵심}을 중심으로 감정을 쌓아가는 드라마",
         "스릴러": f"{핵심}이 살아 있는 몰입형 스릴러",
         "로맨스": f"{핵심}과 감성이 어우러진 로맨스",
@@ -273,7 +276,7 @@ def 줄거리생성(영화명, 장르, 특징태그):
     특징 = 목록문자열(태그분리(특징태그), 3)
     return (
         f"{영화명}은(는) {장르} 장르의 매력을 중심으로 전개되는 작품입니다. "
-        f"이 영화는 {특징} 요소를 바탕으로 관객을 몰입시키며, "
+        f"{특징} 요소를 바탕으로 관객을 몰입시키며, "
         f"인물의 선택과 감정의 흐름이 또렷하게 살아 있어 끝까지 집중해서 보기 좋습니다."
     )
 
@@ -298,12 +301,6 @@ def 기본데이터생성():
             ("조커", 2019, "드라마", 122, 8.4, "토드 필립스", "Joker"),
             ("라라랜드", 2016, "로맨스", 128, 8.0, "데이미언 셔젤", "La La Land"),
             ("겨울왕국", 2013, "애니메이션", 102, 7.4, "크리스 벅, 제니퍼 리", "Frozen"),
-            ("겨울왕국 2", 2019, "애니메이션", 103, 6.8, "크리스 벅, 제니퍼 리", "Frozen II"),
-            ("인사이드 아웃", 2015, "애니메이션", 95, 8.1, "피트 닥터", "Inside Out"),
-            ("토이 스토리 3", 2010, "애니메이션", 103, 8.3, "리 언크리치", "Toy Story 3"),
-            ("포레스트 검프", 1994, "드라마", 142, 8.8, "로버트 저메키스", "Forrest Gump"),
-            ("탑건: 매버릭", 2022, "액션", 130, 8.3, "조셉 코신스키", "Top Gun Maverick"),
-            ("겟 아웃", 2017, "스릴러", 104, 7.7, "조던 필", "Get Out"),
         ],
         "한국": [
             ("명량", 2014, "액션", 128, 7.1, "김한민", "The Admiral Roaring Currents"),
@@ -349,71 +346,31 @@ def 기본데이터생성():
             ("킹스 스피치", 2010, "드라마", 118, 8.0, "톰 후퍼", "The King's Speech"),
             ("노팅 힐", 1999, "로맨스", 124, 7.2, "로저 미첼", "Notting Hill"),
             ("패딩턴 2", 2017, "애니메이션", 103, 7.8, "폴 킹", "Paddington 2"),
-            ("28일 후", 2002, "스릴러", 113, 7.5, "대니 보일", "28 Days Later"),
-            ("브리짓 존스의 일기", 2001, "코미디", 97, 6.8, "샤론 맥과이어", "Bridget Jones's Diary"),
-            ("보헤미안 랩소디", 2018, "드라마", 134, 8.0, "브라이언 싱어", "Bohemian Rhapsody"),
-            ("1917", 2019, "드라마", 119, 8.2, "샘 멘데스", "1917"),
-            ("킹스맨: 시크릿 에이전트", 2014, "액션", 129, 7.7, "매튜 본", "Kingsman The Secret Service"),
         ],
         "스페인": [
             ("판의 미로", 2006, "판타지", 118, 8.2, "기예르모 델 토로", "Pan's Labyrinth"),
             ("더 임파서블", 2012, "드라마", 114, 7.6, "후안 안토니오 바요나", "The Impossible"),
-            ("줄리아의 눈", 2010, "스릴러", 118, 6.7, "기옘 모랄레스", "Julia's Eyes"),
-            ("오픈 유어 아이즈", 1997, "SF", 119, 7.7, "알레한드로 아메나바르", "Open Your Eyes"),
-            ("토렌테", 1998, "코미디", 97, 6.8, "산티아고 세구라", "Torrente"),
-            ("타데오 존스", 2012, "애니메이션", 92, 6.1, "엔리케 가토", "Tad The Lost Explorer"),
-            ("더 바디", 2012, "스릴러", 112, 7.6, "오리올 파울로", "The Body 2012"),
             ("인비저블 게스트", 2016, "스릴러", 106, 8.0, "오리올 파울로", "The Invisible Guest"),
-            ("볼베르", 2006, "드라마", 121, 7.6, "페드로 알모도바르", "Volver"),
-            ("클라우스", 2019, "애니메이션", 97, 8.2, "세르히오 파블로스", "Klaus"),
         ],
         "인도": [
             ("세 얼간이", 2009, "코미디", 170, 8.4, "라지쿠마르 히라니", "3 Idiots"),
             ("당갈", 2016, "드라마", 161, 8.3, "니테시 티와리", "Dangal"),
-            ("바후발리: 더 비기닝", 2015, "액션", 159, 8.0, "S. S. 라자몰리", "Baahubali The Beginning"),
-            ("런치박스", 2013, "로맨스", 104, 7.8, "리테쉬 바트라", "The Lunchbox"),
-            ("안다둔", 2018, "스릴러", 139, 8.2, "스리람 라가반", "Andhadhun"),
             ("RRR", 2022, "액션", 182, 7.8, "S. S. 라자몰리", "RRR"),
-            ("PK", 2014, "코미디", 153, 8.1, "라지쿠마르 히라니", "PK"),
-            ("쇼레이", 1975, "액션", 204, 8.1, "라메쉬 시피", "Sholay"),
-            ("드리시얌", 2015, "스릴러", 163, 8.2, "니시칸트 카마트", "Drishyam"),
-            ("퀸", 2013, "드라마", 146, 8.1, "비카스 발", "Queen 2013"),
         ],
         "일본": [
             ("센과 치히로의 행방불명", 2001, "애니메이션", 125, 8.6, "미야자키 하야오", "Spirited Away"),
             ("너의 이름은", 2016, "로맨스", 106, 8.4, "신카이 마코토", "Your Name"),
             ("고질라 마이너스 원", 2023, "액션", 124, 8.0, "야마자키 타카시", "Godzilla Minus One"),
-            ("링", 1998, "스릴러", 96, 7.2, "나카타 히데오", "Ringu"),
-            ("어느 가족", 2018, "드라마", 121, 7.9, "고레에다 히로카즈", "Shoplifters"),
-            ("하울의 움직이는 성", 2004, "판타지", 119, 8.2, "미야자키 하야오", "Howl's Moving Castle"),
-            ("모노노케 히메", 1997, "판타지", 134, 8.3, "미야자키 하야오", "Princess Mononoke"),
-            ("날씨의 아이", 2019, "로맨스", 114, 7.5, "신카이 마코토", "Weathering with You"),
-            ("스즈메의 문단속", 2022, "애니메이션", 122, 7.7, "신카이 마코토", "Suzume"),
-            ("러브레터", 1995, "로맨스", 117, 7.9, "이와이 슌지", "Love Letter 1995"),
         ],
         "중국": [
             ("와호장룡", 2000, "액션", 120, 7.9, "이안", "Crouching Tiger Hidden Dragon"),
             ("영웅", 2002, "드라마", 99, 7.9, "장이머우", "Hero 2002"),
-            ("유랑지구", 2019, "SF", 125, 6.0, "궈판", "The Wandering Earth"),
-            ("안녕 리", 2021, "코미디", 128, 7.7, "자 링", "Hi Mom 2021"),
-            ("소시대", 2013, "로맨스", 116, 5.0, "궈징밍", "Tiny Times"),
-            ("장진호", 2021, "스릴러", 176, 5.5, "천카이거 외", "The Battle at Lake Changjin"),
-            ("봉신연의: 조가풍운", 2023, "판타지", 148, 6.7, "우얼샨", "Creation of the Gods I Kingdom of Storms"),
-            ("만리장성", 2016, "액션", 103, 6.0, "장이머우", "The Great Wall"),
-            ("적벽대전", 2008, "액션", 148, 7.3, "오우삼", "Red Cliff"),
             ("쿵푸허슬", 2004, "코미디", 99, 7.7, "주성치", "Kung Fu Hustle"),
         ],
         "대만": [
             ("말할 수 없는 비밀", 2007, "로맨스", 101, 7.5, "주걸륜", "Secret 2007"),
             ("그 시절, 우리가 좋아했던 소녀", 2011, "드라마", 109, 7.6, "구파도", "You Are the Apple of My Eye"),
-            ("카페 6", 2016, "코미디", 103, 6.4, "오자운", "At Cafe 6"),
-            ("더 새드니스", 2021, "스릴러", 99, 6.4, "롭 자바즈", "The Sadness"),
-            ("실크", 2006, "판타지", 108, 6.4, "수 차오빈", "Silk 2006"),
-            ("청설", 2009, "드라마", 109, 7.5, "정펀펀", "Hear Me 2009"),
-            ("해피 투게더", 1997, "드라마", 96, 7.7, "왕가위", "Happy Together"),
-            ("아비정전", 1990, "드라마", 94, 7.4, "왕가위", "Days of Being Wild"),
             ("메리 마이 데드 바디", 2023, "코미디", 130, 7.3, "청웨이하오", "Marry My Dead Body"),
-            ("나의 소녀시대", 2015, "로맨스", 134, 7.4, "천옥산", "Our Times"),
         ],
     }
 
@@ -483,10 +440,7 @@ def 데이터불러오기(uploaded_file=None, uploaded_name=None):
             if alias in df.columns:
                 found = alias
                 break
-        if found is not None:
-            normalized[target] = df[found]
-        else:
-            normalized[target] = ""
+        normalized[target] = df[found] if found is not None else ""
 
     out = pd.DataFrame(normalized)
 
@@ -519,14 +473,7 @@ def 대체포스터생성(title, genre, year):
 
     svg = f"""
     <svg xmlns='http://www.w3.org/2000/svg' width='600' height='900'>
-      <defs>
-        <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
-          <stop offset='0%' stop-color='#0f172a'/>
-          <stop offset='100%' stop-color='#1e293b'/>
-        </linearGradient>
-      </defs>
-      <rect width='100%' height='100%' fill='url(#g)'/>
-      <rect x='28' y='28' width='544' height='844' rx='32' fill='none' stroke='#64748b' stroke-width='3'/>
+      <rect width='100%' height='100%' fill='#0f172a'/>
       <text x='50%' y='42%' fill='white' font-size='34' text-anchor='middle' font-family='Arial' font-weight='700'>{safe_title}</text>
       <text x='50%' y='50%' fill='#cbd5e1' font-size='24' text-anchor='middle' font-family='Arial'>{safe_genre}</text>
       <text x='50%' y='57%' fill='#94a3b8' font-size='22' text-anchor='middle' font-family='Arial'>{safe_year}</text>
@@ -541,7 +488,6 @@ def 대체포스터생성(title, genre, year):
 def tmdb포스터가져오기(제목: str, 연도: Optional[float], api_key: Optional[str]) -> Optional[str]:
     if not api_key or not str(제목).strip():
         return None
-
     try:
         params = {
             "api_key": api_key,
@@ -551,22 +497,15 @@ def tmdb포스터가져오기(제목: str, 연도: Optional[float], api_key: Opt
         }
         if pd.notna(연도):
             params["year"] = int(연도)
-
-        resp = requests.get(
-            "https://api.themoviedb.org/3/search/movie",
-            params=params,
-            timeout=10,
-        )
+        resp = requests.get("https://api.themoviedb.org/3/search/movie", params=params, timeout=10)
         resp.raise_for_status()
         data = resp.json()
         results = data.get("results", [])
         if not results:
             return None
-
         poster_path = results[0].get("poster_path")
         if not poster_path:
             return None
-
         return f"https://image.tmdb.org/t/p/w500{poster_path}"
     except Exception:
         return None
@@ -576,20 +515,12 @@ def 포스터주소가져오기(row, tmdb_api_key):
     direct_url = str(row.get("포스터URL", "")).strip()
     if direct_url:
         return direct_url
-
-    query = str(row.get("포스터검색어", "")).strip()
-    title = query if query else str(row.get("영화명", "")).strip()
+    query = str(row.get("포스터검색어", "")).strip() or str(row.get("영화명", "")).strip()
     year = row.get("개봉연도", None)
-
-    tmdb_url = tmdb포스터가져오기(title, year, tmdb_api_key)
+    tmdb_url = tmdb포스터가져오기(query, year, tmdb_api_key)
     if tmdb_url:
         return tmdb_url
-
-    return 대체포스터생성(
-        title=row.get("영화명", ""),
-        genre=row.get("장르", ""),
-        year=row.get("개봉연도", None),
-    )
+    return 대체포스터생성(row.get("영화명", ""), row.get("장르", ""), row.get("개봉연도", None))
 
 
 def 스타일적용(다크모드=True):
@@ -610,266 +541,54 @@ def 스타일적용(다크모드=True):
                 {bg};
             color: {main_text};
         }}
-        .block-container {{
-            padding-top: 1rem;
-            padding-bottom: 2rem;
-            max-width: 1480px;
-        }}
+        .block-container {{ max-width: 1480px; padding-top: 1rem; padding-bottom: 2rem; }}
         section.main h1, section.main h2, section.main h3, section.main h4,
-        section.main p, section.main label, section.main div, section.main span {{
-            color: {main_text};
-        }}
-        .stMarkdown, .stCaption {{
-            color: {main_text} !important;
-        }}
-        section[data-testid="stSidebar"] * {{
-            color: {sidebar_text} !important;
-        }}
-        section[data-testid="stSidebar"] input,
-        section[data-testid="stSidebar"] textarea {{
+        section.main p, section.main label, section.main div, section.main span {{ color: {main_text}; }}
+        .stMarkdown, .stCaption {{ color: {main_text} !important; }}
+        section[data-testid="stSidebar"] * {{ color: {sidebar_text} !important; }}
+        section[data-testid="stSidebar"] input, section[data-testid="stSidebar"] textarea {{
             color: {sidebar_text} !important;
             -webkit-text-fill-color: {sidebar_text} !important;
         }}
         .hero-wrap {{
-            position: relative;
-            min-height: 470px;
-            border-radius: 30px;
-            overflow: hidden;
-            margin-bottom: 26px;
-            border: 1px solid rgba(255,255,255,.08);
-            box-shadow: 0 20px 60px rgba(0,0,0,.35);
-            background: #0f172a;
+            position: relative; min-height: 430px; border-radius: 28px; overflow: hidden; margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,.08); box-shadow: 0 20px 60px rgba(0,0,0,.35); background: #0f172a;
         }}
-        .hero-bg {{
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }}
-        .hero-overlay {{
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(90deg, rgba(3,7,18,.94) 0%, rgba(3,7,18,.78) 35%, rgba(3,7,18,.30) 70%, rgba(3,7,18,.15) 100%),
-                linear-gradient(0deg, rgba(3,7,18,.82) 0%, rgba(3,7,18,.15) 55%, rgba(3,7,18,.05) 100%);
-        }}
-        .hero-content {{
-            position: relative;
-            z-index: 2;
-            padding: 42px;
-            max-width: 760px;
-        }}
-        .hero-badge {{
-            display: inline-block;
-            padding: 7px 14px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.12);
-            border: 1px solid rgba(255,255,255,.14);
-            color: #fff;
-            font-size: .82rem;
-            margin-bottom: 16px;
-        }}
-        .hero-title {{
-            font-size: 3rem;
-            line-height: 1.05;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: 12px;
-            color: #fff;
-        }}
-        .hero-meta {{
-            font-size: .96rem;
-            color: #dbe4f0;
-            margin-bottom: 18px;
-        }}
-        .hero-desc {{
-            font-size: 1rem;
-            color: #d4dbe5;
-            line-height: 1.7;
-            margin-bottom: 16px;
-        }}
-        .chip-row {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-        }}
-        .chip {{
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.09);
-            color: #fff;
-            font-size: .85rem;
-            border: 1px solid rgba(255,255,255,.10);
-        }}
-        .hero-stats {{
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }}
-        .hero-stat {{
-            min-width: 120px;
-            padding: 14px 16px;
-            border-radius: 18px;
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(255,255,255,.10);
-        }}
-        .hero-stat-label {{
-            color: #d1d5db;
-            font-size: .78rem;
-            margin-bottom: 4px;
-        }}
-        .hero-stat-value {{
-            color: #fff;
-            font-size: 1.05rem;
-            font-weight: 700;
-        }}
-        .section-title {{
-            font-size: 1.28rem;
-            font-weight: 800;
-            margin: 8px 0 16px 0;
-            letter-spacing: -0.02em;
-        }}
-        .movie-card {{
-            position: relative;
-            border-radius: 22px;
-            overflow: hidden;
-            margin-bottom: 18px;
-            background: {card_bg};
-            border: 1px solid {border};
-            box-shadow: 0 12px 30px rgba(0,0,0,.18);
-            transition: transform .18s ease, box-shadow .18s ease;
-        }}
-        .movie-card:hover {{
-            transform: translateY(-4px);
-            box-shadow: 0 16px 36px rgba(0,0,0,.28);
-        }}
-        .poster-wrap {{
-            position: relative;
-        }}
-        .poster-img {{
-            width: 100%;
-            height: 360px;
-            object-fit: cover;
-            display: block;
-            background: #0f172a;
-        }}
-        .card-gradient {{
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.82));
-        }}
-        .card-hover {{
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transition: .18s ease;
-            background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.92));
-            color: #fff;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            font-size: .9rem;
-        }}
-        .movie-card:hover .card-hover {{
-            opacity: 1;
-        }}
-        .card-bottom {{
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            padding: 16px;
-            z-index: 2;
-        }}
-        .card-title {{
-            font-size: 1rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 6px;
-            line-height: 1.3;
-        }}
-        .card-sub {{
-            font-size: .84rem;
-            color: #dbe3ee;
-        }}
-        .detail-panel {{
-            background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78));
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: 26px;
-            padding: 26px;
-            box-shadow: 0 16px 40px rgba(0,0,0,.24);
-        }}
-        .detail-head {{
-            font-size: 1.55rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }}
-        .detail-meta {{
-            color: {sub};
-            font-size: .96rem;
-            margin-bottom: 16px;
-        }}
-        .detail-grid {{
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 18px;
-        }}
-        .detail-box {{
-            background: rgba(255,255,255,.04);
-            border: 1px solid rgba(255,255,255,.06);
-            border-radius: 18px;
-            padding: 14px 16px;
-        }}
-        .detail-box-label {{
-            font-size: .78rem;
-            color: #cbd5e1;
-            margin-bottom: 5px;
-        }}
-        .detail-box-value {{
-            font-size: .95rem;
-            color: #fff;
-            font-weight: 600;
-            line-height: 1.45;
-        }}
-        .rail-card {{
-            background: {card_bg};
-            border: 1px solid {border};
-            border-radius: 18px;
-            padding: 14px 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 10px 24px rgba(0,0,0,.12);
-        }}
-        .rail-title {{
-            font-size: .98rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: {main_text};
-        }}
-        .rail-sub {{
-            font-size: .84rem;
-            color: {sub};
-            line-height: 1.5;
-        }}
-        .page-box {{
-            padding: 12px 14px;
-            border-radius: 18px;
-            border: 1px solid {border};
-            background: rgba(17,24,39,.65);
-            margin-bottom: 20px;
-            box-shadow: 0 12px 28px rgba(0,0,0,.14);
-        }}
-        [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
-            color: {main_text} !important;
-        }}
-        .action-btn-note {{
-            font-size: .82rem;
-            color: {sub};
-            margin-top: 4px;
-        }}
+        .hero-bg {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }}
+        .hero-overlay {{ position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3,7,18,.94) 0%, rgba(3,7,18,.65) 45%, rgba(3,7,18,.20) 100%); }}
+        .hero-content {{ position: relative; z-index: 2; padding: 38px; max-width: 760px; }}
+        .hero-badge {{ display:inline-block; padding:7px 14px; border-radius:999px; background:rgba(255,255,255,.12); color:#fff; font-size:.82rem; margin-bottom:14px; }}
+        .hero-title {{ font-size:2.8rem; font-weight:800; line-height:1.05; margin-bottom:12px; color:#fff; }}
+        .hero-meta {{ font-size:.96rem; color:#dbe4f0; margin-bottom:14px; }}
+        .hero-desc {{ font-size:1rem; color:#d4dbe5; line-height:1.7; margin-bottom:14px; }}
+        .chip-row {{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }}
+        .chip {{ padding:8px 14px; border-radius:999px; background:rgba(255,255,255,.09); color:#fff; font-size:.85rem; border:1px solid rgba(255,255,255,.10); }}
+        .hero-stats {{ display:flex; gap:12px; flex-wrap:wrap; }}
+        .hero-stat {{ min-width:120px; padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); }}
+        .hero-stat-label {{ color:#d1d5db; font-size:.78rem; margin-bottom:4px; }}
+        .hero-stat-value {{ color:#fff; font-size:1.05rem; font-weight:700; }}
+        .section-title {{ font-size:1.22rem; font-weight:800; margin:8px 0 16px 0; }}
+        .movie-card {{ position:relative; border-radius:22px; overflow:hidden; margin-bottom:18px; background:{card_bg}; border:1px solid {border}; box-shadow:0 12px 30px rgba(0,0,0,.18); }}
+        .poster-wrap {{ position:relative; }}
+        .poster-img {{ width:100%; height:350px; object-fit:cover; display:block; background:#0f172a; }}
+        .card-gradient {{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.82)); }}
+        .card-hover {{ position:absolute; inset:0; opacity:0; transition:.18s ease; background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.92)); color:#fff; padding:16px; display:flex; flex-direction:column; justify-content:flex-end; font-size:.9rem; }}
+        .movie-card:hover .card-hover {{ opacity:1; }}
+        .card-bottom {{ position:absolute; left:0; right:0; bottom:0; padding:16px; z-index:2; }}
+        .card-title {{ font-size:1rem; font-weight:700; color:#fff; margin-bottom:6px; line-height:1.3; }}
+        .card-sub {{ font-size:.84rem; color:#dbe3ee; }}
+        .detail-panel {{ background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78)); border:1px solid rgba(255,255,255,.08); border-radius:26px; padding:26px; }}
+        .detail-head {{ font-size:1.5rem; font-weight:800; margin-bottom:8px; }}
+        .detail-meta {{ color:{sub}; font-size:.96rem; margin-bottom:16px; }}
+        .detail-grid {{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:18px; }}
+        .detail-box {{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:14px 16px; }}
+        .detail-box-label {{ font-size:.78rem; color:#cbd5e1; margin-bottom:5px; }}
+        .detail-box-value {{ font-size:.95rem; color:#fff; font-weight:600; line-height:1.45; }}
+        .rail-card {{ background:{card_bg}; border:1px solid {border}; border-radius:18px; padding:14px 16px; margin-bottom:12px; }}
+        .rail-title {{ font-size:.98rem; font-weight:700; margin-bottom:5px; color:{main_text}; }}
+        .rail-sub {{ font-size:.84rem; color:{sub}; line-height:1.5; }}
+        .page-box {{ padding:12px 14px; border-radius:18px; border:1px solid {border}; background:rgba(17,24,39,.65); margin-bottom:20px; }}
+        [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{ color:{main_text} !important; }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -941,120 +660,18 @@ def 히어로HTML생성(row, tmdb_api_key):
             <div class='hero-desc' style='font-size:.95rem;'>{escape(str(row["한줄요약"]))}</div>
             <div class='chip-row'>{chips}</div>
             <div class='hero-stats'>
-                <div class='hero-stat'>
-                    <div class='hero-stat-label'>평점</div>
-                    <div class='hero-stat-value'>★ {rating}</div>
-                </div>
-                <div class='hero-stat'>
-                    <div class='hero-stat-label'>관객수</div>
-                    <div class='hero-stat-value'>{audience}</div>
-                </div>
-                <div class='hero-stat'>
-                    <div class='hero-stat-label'>글로벌 흥행액</div>
-                    <div class='hero-stat-value'>{gross}</div>
-                </div>
-                <div class='hero-stat'>
-                    <div class='hero-stat-label'>연령등급</div>
-                    <div class='hero-stat-value'>{escape(str(row["연령등급"]))}</div>
-                </div>
+                <div class='hero-stat'><div class='hero-stat-label'>평점</div><div class='hero-stat-value'>★ {rating}</div></div>
+                <div class='hero-stat'><div class='hero-stat-label'>관객수</div><div class='hero-stat-value'>{audience}</div></div>
+                <div class='hero-stat'><div class='hero-stat-label'>글로벌 흥행액</div><div class='hero-stat-value'>{gross}</div></div>
+                <div class='hero-stat'><div class='hero-stat-label'>연령등급</div><div class='hero-stat-value'>{escape(str(row["연령등급"]))}</div></div>
             </div>
         </div>
     </div>
     """
 
 
-def 필터링(df):
-    with st.sidebar:
-        st.subheader("필터")
-        선택국가 = st.multiselect("국가", [x for x in 사용가능국가 if x in df["국가"].unique().tolist()])
-        선택장르 = st.multiselect("장르", sorted(df["장르"].dropna().unique().tolist()))
-        선택세부장르 = st.multiselect("세부장르", sorted(df["세부장르"].dropna().unique().tolist()))
-        선택시대 = st.multiselect("시대", [x for x in 시대순서 if x in df["시대구분"].unique().tolist()])
-        선택감정 = st.multiselect("기분 태그", sorted({tag for text in df["감정태그"] for tag in 태그분리(text)}))
-        선택상황 = st.multiselect("상황 태그", sorted({tag for text in df["상황태그"] for tag in 태그분리(text)}))
-        선택연령등급 = st.multiselect("연령등급", sorted(df["연령등급"].dropna().unique().tolist()))
-        선택OTT = st.multiselect("OTT", sorted({tag for text in df["OTT"] for tag in 태그분리(text)}))
-        러닝타임옵션 = st.multiselect("러닝타임", ["100분 미만", "100~119분", "120~139분", "140분 이상"])
-        해시태그검색 = st.text_input("해시태그 검색", placeholder="#반전, #힐링")
-        일반검색 = st.text_input("영화명 / 감독 / 배우 / 특징 검색")
-        정렬기준 = st.selectbox(
-            "정렬",
-            ["평점 높은 순", "최신순", "관객수 높은 순", "영화명순", "짧은 러닝타임순", "감정 태그 일치순"]
-        )
-        페이지당개수 = st.selectbox("페이지당 카드 수", [8, 10, 12, 15, 20], index=2)
-
-    filtered = df.copy()
-
-    if 선택국가:
-        filtered = filtered[filtered["국가"].isin(선택국가)]
-    if 선택장르:
-        filtered = filtered[filtered["장르"].isin(선택장르)]
-    if 선택세부장르:
-        filtered = filtered[filtered["세부장르"].isin(선택세부장르)]
-    if 선택시대:
-        filtered = filtered[filtered["시대구분"].isin(선택시대)]
-    if 선택감정:
-        filtered = filtered[filtered["감정태그"].apply(lambda x: 모든태그포함여부(x, 선택감정))]
-    if 선택상황:
-        filtered = filtered[filtered["상황태그"].apply(lambda x: 모든태그포함여부(x, 선택상황))]
-    if 선택연령등급:
-        filtered = filtered[filtered["연령등급"].isin(선택연령등급)]
-    if 선택OTT:
-        filtered = filtered[filtered["OTT"].apply(lambda x: all(t in 태그분리(x) for t in 선택OTT))]
-    if 러닝타임옵션:
-        filtered = filtered[filtered["상영시간"].apply(lambda x: 러닝타임구간(x) in 러닝타임옵션)]
-    if 해시태그검색.strip():
-        query_tags = [t.lstrip("#") for t in 태그분리(해시태그검색.replace(" ", ","))]
-        filtered = filtered[
-            filtered["해시태그"].apply(
-                lambda x: any(q.lower() in str(x).lower().replace("#", "") for q in query_tags)
-            )
-        ]
-    if 일반검색.strip():
-        q = 일반검색.lower()
-        filtered = filtered[
-            filtered["영화명"].str.lower().str.contains(q, na=False)
-            | filtered["감독"].str.lower().str.contains(q, na=False)
-            | filtered["출연진"].str.lower().str.contains(q, na=False)
-            | filtered["특징태그"].str.lower().str.contains(q, na=False)
-            | filtered["줄거리"].str.lower().str.contains(q, na=False)
-        ]
-
-    if 정렬기준 == "평점 높은 순":
-        filtered = filtered.sort_values(["평점", "개봉연도"], ascending=[False, False], na_position="last")
-    elif 정렬기준 == "최신순":
-        filtered = filtered.sort_values(["개봉연도", "평점"], ascending=[False, False], na_position="last")
-    elif 정렬기준 == "관객수 높은 순":
-        filtered = filtered.sort_values(["관객수", "평점"], ascending=[False, False], na_position="last")
-    elif 정렬기준 == "짧은 러닝타임순":
-        filtered = filtered.sort_values(["상영시간", "평점"], ascending=[True, False], na_position="last")
-    elif 정렬기준 == "감정 태그 일치순":
-        filtered["감정일치수"] = filtered["감정태그"].apply(lambda x: len(set(태그분리(x)).intersection(set(선택감정))))
-        filtered = filtered.sort_values(["감정일치수", "평점"], ascending=[False, False], na_position="last")
-        filtered = filtered.drop(columns=["감정일치수"], errors="ignore")
-    else:
-        filtered = filtered.sort_values("영화명", ascending=True)
-
-    return filtered, 페이지당개수
-
-
-def 세션초기화():
-    defaults = {
-        "wishlist": set(),
-        "watched": set(),
-        "rewatch": set(),
-        "user_rating": {},
-        "user_review": {},
-        "현재페이지": 1,
-    }
-    for k, v in defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
-
-
-def 추천섹션(title, data, tmdb_api_key, cols_per_row=5, max_items=10):
+def 추천섹션(title, data, tmdb_api_key, cols_per_row=5):
     st.markdown(f"<div class='section-title'>{title}</div>", unsafe_allow_html=True)
-    data = data.head(max_items)
     if len(data) == 0:
         st.info("표시할 영화가 없습니다.")
         return
@@ -1064,6 +681,30 @@ def 추천섹션(title, data, tmdb_api_key, cols_per_row=5, max_items=10):
         for col, (_, row) in zip(cols, chunk.iterrows()):
             with col:
                 st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
+
+
+def 세션초기화():
+    if "wishlist" not in st.session_state:
+        st.session_state["wishlist"] = []
+    if "watched" not in st.session_state:
+        st.session_state["watched"] = []
+    if "rewatch" not in st.session_state:
+        st.session_state["rewatch"] = []
+    if "user_rating" not in st.session_state:
+        st.session_state["user_rating"] = {}
+    if "user_review" not in st.session_state:
+        st.session_state["user_review"] = {}
+    if "현재페이지" not in st.session_state:
+        st.session_state["현재페이지"] = 1
+
+
+def 리스트토글(key, value):
+    arr = st.session_state[key]
+    if value in arr:
+        arr.remove(value)
+    else:
+        arr.append(value)
+    st.session_state[key] = arr
 
 
 def 메인():
@@ -1085,12 +726,7 @@ def 메인():
 
     with st.sidebar:
         st.caption("실제 포스터를 자동으로 불러오려면 TMDb API Key를 넣어주세요.")
-        manual_tmdb = st.text_input(
-            "TMDb API Key",
-            type="password",
-            value=tmdb_api_key or "",
-            help="없으면 포스터URL 또는 대체 포스터를 사용합니다."
-        )
+        manual_tmdb = st.text_input("TMDb API Key", type="password", value=tmdb_api_key or "")
         if manual_tmdb.strip():
             tmdb_api_key = manual_tmdb.strip()
 
@@ -1103,7 +739,64 @@ def 메인():
         st.error(f"데이터를 불러오지 못했습니다: {e}")
         st.stop()
 
-    filtered, 페이지당개수 = 필터링(df)
+    with st.sidebar:
+        st.subheader("필터")
+        선택국가 = st.multiselect("국가", [x for x in 사용가능국가 if x in df["국가"].unique().tolist()])
+        선택장르 = st.multiselect("장르", sorted(df["장르"].dropna().unique().tolist()))
+        선택세부장르 = st.multiselect("세부장르", sorted(df["세부장르"].dropna().unique().tolist()))
+        선택시대 = st.multiselect("시대", [x for x in 시대순서 if x in df["시대구분"].unique().tolist()])
+        선택감정 = st.multiselect("기분 태그", sorted({tag for text in df["감정태그"] for tag in 태그분리(text)}))
+        선택상황 = st.multiselect("상황 태그", sorted({tag for text in df["상황태그"] for tag in 태그분리(text)}))
+        선택연령등급 = st.multiselect("연령등급", sorted(df["연령등급"].dropna().unique().tolist()))
+        선택OTT = st.multiselect("OTT", sorted({tag for text in df["OTT"] for tag in 태그분리(text)}))
+        러닝타임옵션 = st.multiselect("러닝타임", ["100분 미만", "100~119분", "120~139분", "140분 이상"])
+        해시태그검색 = st.text_input("해시태그 검색", placeholder="#반전, #힐링")
+        일반검색 = st.text_input("영화명 / 감독 / 배우 / 특징 검색")
+        정렬기준 = st.selectbox("정렬", ["평점 높은 순", "최신순", "관객수 높은 순", "영화명순", "짧은 러닝타임순"])
+        페이지당개수 = st.selectbox("페이지당 카드 수", [8, 10, 12, 15, 20], index=2)
+
+    filtered = df.copy()
+    if 선택국가:
+        filtered = filtered[filtered["국가"].isin(선택국가)]
+    if 선택장르:
+        filtered = filtered[filtered["장르"].isin(선택장르)]
+    if 선택세부장르:
+        filtered = filtered[filtered["세부장르"].isin(선택세부장르)]
+    if 선택시대:
+        filtered = filtered[filtered["시대구분"].isin(선택시대)]
+    if 선택감정:
+        filtered = filtered[filtered["감정태그"].apply(lambda x: 모든태그포함여부(x, 선택감정))]
+    if 선택상황:
+        filtered = filtered[filtered["상황태그"].apply(lambda x: 모든태그포함여부(x, 선택상황))]
+    if 선택연령등급:
+        filtered = filtered[filtered["연령등급"].isin(선택연령등급)]
+    if 선택OTT:
+        filtered = filtered[filtered["OTT"].apply(lambda x: all(t in 태그분리(x) for t in 선택OTT))]
+    if 러닝타임옵션:
+        filtered = filtered[filtered["상영시간"].apply(lambda x: 러닝타임구간(x) in 러닝타임옵션)]
+    if 해시태그검색.strip():
+        query_tags = [t.lstrip("#") for t in 태그분리(해시태그검색.replace(" ", ","))]
+        filtered = filtered[filtered["해시태그"].apply(lambda x: any(q.lower() in str(x).lower().replace("#", "") for q in query_tags))]
+    if 일반검색.strip():
+        q = 일반검색.lower()
+        filtered = filtered[
+            filtered["영화명"].str.lower().str.contains(q, na=False)
+            | filtered["감독"].str.lower().str.contains(q, na=False)
+            | filtered["출연진"].str.lower().str.contains(q, na=False)
+            | filtered["특징태그"].str.lower().str.contains(q, na=False)
+            | filtered["줄거리"].str.lower().str.contains(q, na=False)
+        ]
+
+    if 정렬기준 == "평점 높은 순":
+        filtered = filtered.sort_values(["평점", "개봉연도"], ascending=[False, False], na_position="last")
+    elif 정렬기준 == "최신순":
+        filtered = filtered.sort_values(["개봉연도", "평점"], ascending=[False, False], na_position="last")
+    elif 정렬기준 == "관객수 높은 순":
+        filtered = filtered.sort_values(["관객수", "평점"], ascending=[False, False], na_position="last")
+    elif 정렬기준 == "짧은 러닝타임순":
+        filtered = filtered.sort_values(["상영시간", "평점"], ascending=[True, False], na_position="last")
+    else:
+        filtered = filtered.sort_values("영화명", ascending=True)
 
     top1, top2, top3, top4 = st.columns(4)
     top1.metric("전체 영화 수", len(df))
@@ -1120,26 +813,17 @@ def 메인():
 
     st.markdown(히어로HTML생성(선택행, tmdb_api_key), unsafe_allow_html=True)
 
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
+    a1, a2, a3, a4 = st.columns(4)
+    with a1:
         if st.button("🤍 찜하기 / 해제", use_container_width=True):
-            if 선택영화명 in st.session_state["wishlist"]:
-                st.session_state["wishlist"].remove(선택영화명)
-            else:
-                st.session_state["wishlist"].add(선택영화명)
-    with c2:
+            리스트토글("wishlist", 선택영화명)
+    with a2:
         if st.button("✅ 본 영화 체크", use_container_width=True):
-            if 선택영화명 in st.session_state["watched"]:
-                st.session_state["watched"].remove(선택영화명)
-            else:
-                st.session_state["watched"].add(선택영화명)
-    with c3:
+            리스트토글("watched", 선택영화명)
+    with a3:
         if st.button("🔁 다시 보고 싶음", use_container_width=True):
-            if 선택영화명 in st.session_state["rewatch"]:
-                st.session_state["rewatch"].remove(선택영화명)
-            else:
-                st.session_state["rewatch"].add(선택영화명)
-    with c4:
+            리스트토글("rewatch", 선택영화명)
+    with a4:
         st.link_button("▶ 예고편 보기", str(선택행["예고편URL"]), use_container_width=True)
 
     전체페이지수 = max(1, math.ceil(len(filtered) / 페이지당개수))
@@ -1147,48 +831,33 @@ def 메인():
         st.session_state["현재페이지"] = 전체페이지수
 
     st.markdown("<div class='page-box'>", unsafe_allow_html=True)
-    pcol1, pcol2, pcol3, pcol4 = st.columns([1, 1, 2, 2])
-    with pcol1:
+    p1, p2, p3, p4 = st.columns([1, 1, 2, 2])
+    with p1:
         if st.button("◀ 이전 페이지", use_container_width=True):
             st.session_state["현재페이지"] = max(1, st.session_state["현재페이지"] - 1)
-    with pcol2:
+    with p2:
         if st.button("다음 페이지 ▶", use_container_width=True):
             st.session_state["현재페이지"] = min(전체페이지수, st.session_state["현재페이지"] + 1)
-    with pcol3:
-        현재페이지입력 = st.number_input(
-            "페이지 번호",
-            min_value=1,
-            max_value=전체페이지수,
-            value=st.session_state["현재페이지"],
-            step=1,
-        )
+    with p3:
+        현재페이지입력 = st.number_input("페이지 번호", min_value=1, max_value=전체페이지수, value=st.session_state["현재페이지"], step=1)
         st.session_state["현재페이지"] = 현재페이지입력
-    with pcol4:
-        st.markdown(
-            f"<div style='padding-top:30px; font-size:.95rem;'>현재 <b>{st.session_state['현재페이지']}</b> / 전체 <b>{전체페이지수}</b> 페이지</div>",
-            unsafe_allow_html=True
-        )
+    with p4:
+        st.markdown(f"<div style='padding-top:30px; font-size:.95rem;'>현재 <b>{st.session_state['현재페이지']}</b> / 전체 <b>{전체페이지수}</b> 페이지</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     시작 = (st.session_state["현재페이지"] - 1) * 페이지당개수
     끝 = 시작 + 페이지당개수
     page_df = filtered.iloc[시작:끝].copy()
 
-    추천섹션("지금 많이 보는 영화", page_df, tmdb_api_key, cols_per_row=5, max_items=len(page_df))
-    추천섹션("한국 흥행작 모음", df[df["국가"] == "한국"].sort_values("관객수", ascending=False), tmdb_api_key)
-    추천섹션("감성 로맨스 모음", df[df["장르"] == "로맨스"].sort_values("평점", ascending=False), tmdb_api_key)
-    추천섹션("몰입감 높은 스릴러", df[df["장르"] == "스릴러"].sort_values("평점", ascending=False), tmdb_api_key)
-    추천섹션("가족과 보기 좋은 작품", df[df["연령등급"].isin(["전체관람가", "12세 이상"])].sort_values("평점", ascending=False), tmdb_api_key)
-    추천섹션("2000년대 명작", df[df["시대구분"] == "2000년대"].sort_values("평점", ascending=False), tmdb_api_key)
-    추천섹션("연말 / 겨울 분위기 추천", df[df["해시태그"].str.contains("감성|가족|여운", na=False)].sort_values("평점", ascending=False), tmdb_api_key)
-    추천섹션("머리 비우고 보기 좋은 코미디", df[df["장르"] == "코미디"].sort_values("평점", ascending=False), tmdb_api_key)
+    추천섹션("지금 많이 보는 영화", page_df, tmdb_api_key, cols_per_row=5)
+    추천섹션("한국 흥행작 모음", df[df["국가"] == "한국"].sort_values("관객수", ascending=False).head(10), tmdb_api_key, cols_per_row=5)
+    추천섹션("감성 로맨스 모음", df[df["장르"] == "로맨스"].sort_values("평점", ascending=False).head(10), tmdb_api_key, cols_per_row=5)
+    추천섹션("몰입감 높은 스릴러", df[df["장르"] == "스릴러"].sort_values("평점", ascending=False).head(10), tmdb_api_key, cols_per_row=5)
 
     st.markdown("<div class='section-title'>선택한 영화 상세</div>", unsafe_allow_html=True)
     info1, info2 = st.columns([1.0, 2.0])
-
     with info1:
         st.image(포스터주소가져오기(선택행, tmdb_api_key), use_container_width=True)
-
     with info2:
         st.markdown("<div class='detail-panel'>", unsafe_allow_html=True)
         st.markdown(f"<div class='detail-head'>{escape(str(선택행['영화명']))}</div>", unsafe_allow_html=True)
@@ -1199,7 +868,6 @@ def 메인():
             f"{escape(str(선택행['연령등급']))}</div>",
             unsafe_allow_html=True
         )
-
         st.markdown(f"**한 줄 요약**: {선택행['한줄요약']}")
         st.markdown(f"**짧은 소개**: {선택행['짧은소개']}")
         st.markdown(f"**줄거리**: {선택행['줄거리']}")
@@ -1212,38 +880,14 @@ def 메인():
         st.markdown(
             f"""
             <div class='detail-grid'>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>평점</div>
-                    <div class='detail-box-value'>★ {('-' if pd.isna(선택행['평점']) else round(float(선택행['평점']), 1))}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>관객수</div>
-                    <div class='detail-box-value'>{숫자표시(선택행['관객수'])}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>글로벌 흥행액</div>
-                    <div class='detail-box-value'>{금액표시(선택행['글로벌흥행액'])}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>러닝타임 구간</div>
-                    <div class='detail-box-value'>{러닝타임구간(선택행['상영시간'])}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>감정 태그</div>
-                    <div class='detail-box-value'>{escape(', '.join(태그분리(선택행['감정태그'])) or '-')}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>상황 태그</div>
-                    <div class='detail-box-value'>{escape(', '.join(태그분리(선택행['상황태그'])) or '-')}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>특징 태그</div>
-                    <div class='detail-box-value'>{escape(', '.join(태그분리(선택행['특징태그'])) or '-')}</div>
-                </div>
-                <div class='detail-box'>
-                    <div class='detail-box-label'>해시태그</div>
-                    <div class='detail-box-value'>{escape(', '.join(태그분리(선택행['해시태그'])) or '-')}</div>
-                </div>
+                <div class='detail-box'><div class='detail-box-label'>평점</div><div class='detail-box-value'>★ {('-' if pd.isna(선택행['평점']) else round(float(선택행['평점']), 1))}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>관객수</div><div class='detail-box-value'>{숫자표시(선택행['관객수'])}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>글로벌 흥행액</div><div class='detail-box-value'>{금액표시(선택행['글로벌흥행액'])}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>러닝타임 구간</div><div class='detail-box-value'>{러닝타임구간(선택행['상영시간'])}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>감정 태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['감정태그'])))}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>상황 태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['상황태그'])))}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>특징 태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['특징태그'])))}</div></div>
+                <div class='detail-box'><div class='detail-box-label'>해시태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['해시태그'])))}</div></div>
             </div>
             """,
             unsafe_allow_html=True
@@ -1251,96 +895,68 @@ def 메인():
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='section-title'>내 평가 / 한 줄 리뷰</div>", unsafe_allow_html=True)
-    review_col1, review_col2 = st.columns([1, 2])
-    with review_col1:
+    r1, r2 = st.columns([1, 2])
+    with r1:
         user_score = st.slider("내 평점", 0.0, 10.0, float(st.session_state["user_rating"].get(선택영화명, 8.0)), 0.5)
         if st.button("내 평점 저장", use_container_width=True):
             st.session_state["user_rating"][선택영화명] = user_score
-    with review_col2:
+    with r2:
         current_review = st.session_state["user_review"].get(선택영화명, "")
         review_text = st.text_area("한 줄 리뷰", value=current_review, height=100, placeholder="예: 긴장감이 끝까지 유지되는 반전 스릴러")
         if st.button("리뷰 저장", use_container_width=True):
             st.session_state["user_review"][선택영화명] = review_text
 
-    if 선택영화명 in st.session_state["user_rating"] or 선택영화명 in st.session_state["user_review"]:
-        st.info(
-            f"저장된 내 평점: {st.session_state['user_rating'].get(선택영화명, '-')} / "
-            f"저장된 한 줄 리뷰: {st.session_state['user_review'].get(선택영화명, '-')}"
-        )
-
     st.markdown("<div class='section-title'>비슷한 작품 추천</div>", unsafe_allow_html=True)
-
     같은장르 = df[(df["장르"] == 선택행["장르"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
     같은감독 = df[(df["감독"] == 선택행["감독"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
     시리즈추천 = df[(df["시리즈"] == 선택행["시리즈"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6) if str(선택행["시리즈"]).strip() else df.iloc[0:0]
-
     배우목록 = 태그분리(str(선택행["출연진"]).replace(" (성우)", ""))
     같은배우 = df[df["영화명"] != 선택행["영화명"]].copy()
     같은배우 = 같은배우[같은배우["출연진"].apply(lambda x: any(actor in str(x) for actor in 배우목록))]
     같은배우 = 같은배우.sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
 
-    rec1, rec2, rec3, rec4 = st.columns(4)
-
-    with rec1:
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
         st.markdown("**같은 장르**")
         for _, rec in 같은장르.iterrows():
-            st.markdown(
-                f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
-                f"<div class='rail-sub'>{escape(str(rec['국가']))} · {escape(str(rec['장르']))} · 평점 {rec['평점']}</div></div>",
-                unsafe_allow_html=True,
-            )
-
-    with rec2:
+            st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['국가']))} · {escape(str(rec['장르']))} · 평점 {rec['평점']}</div></div>", unsafe_allow_html=True)
+    with c2:
         st.markdown("**같은 감독**")
         if len(같은감독) == 0:
             st.info("같은 감독 작품이 없습니다.")
         else:
             for _, rec in 같은감독.iterrows():
-                st.markdown(
-                    f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
-                    f"<div class='rail-sub'>{escape(str(rec['감독']))} · {escape(str(rec['국가']))}</div></div>",
-                    unsafe_allow_html=True,
-                )
-
-    with rec3:
+                st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['감독']))} · {escape(str(rec['국가']))}</div></div>", unsafe_allow_html=True)
+    with c3:
         st.markdown("**같은 배우**")
         if len(같은배우) == 0:
             st.info("같은 배우 기반 추천이 없습니다.")
         else:
             for _, rec in 같은배우.iterrows():
-                st.markdown(
-                    f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
-                    f"<div class='rail-sub'>{escape(str(rec['출연진']))}</div></div>",
-                    unsafe_allow_html=True,
-                )
-
-    with rec4:
+                st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['출연진']))}</div></div>", unsafe_allow_html=True)
+    with c4:
         st.markdown("**같은 시리즈 / 세계관**")
         if len(시리즈추천) == 0:
             st.info("같은 시리즈 추천이 없습니다.")
         else:
             for _, rec in 시리즈추천.iterrows():
-                st.markdown(
-                    f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div>"
-                    f"<div class='rail-sub'>{escape(str(rec['시리즈']))}</div></div>",
-                    unsafe_allow_html=True,
-                )
+                st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['시리즈']))}</div></div>", unsafe_allow_html=True)
 
     st.markdown("<div class='section-title'>내 리스트</div>", unsafe_allow_html=True)
-    list_col1, list_col2, list_col3 = st.columns(3)
-    with list_col1:
+    l1, l2, l3 = st.columns(3)
+    with l1:
         st.markdown("**찜한 영화**")
-        st.write(list(st.session_state["wishlist"]) if st.session_state["wishlist"] else ["없음"])
-    with list_col2:
+        st.write(st.session_state["wishlist"] if st.session_state["wishlist"] else ["없음"])
+    with l2:
         st.markdown("**본 영화**")
-        st.write(list(st.session_state["watched"]) if st.session_state["watched"] else ["없음"])
-    with list_col3:
+        st.write(st.session_state["watched"] if st.session_state["watched"] else ["없음"])
+    with l3:
         st.markdown("**다시 보고 싶은 영화**")
-        st.write(list(st.session_state["rewatch"]) if st.session_state["rewatch"] else ["없음"])
+        st.write(st.session_state["rewatch"] if st.session_state["rewatch"] else ["없음"])
 
     with st.expander("현재 검색 데이터 표 보기"):
         st.dataframe(page_df[표시컬럼], use_container_width=True, hide_index=True)
 
 
 if __name__ == "__main__":
-    메인()메인()
+    메인()
