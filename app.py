@@ -1444,48 +1444,31 @@ def 카드HTML생성(row, tmdb_api_key):
 
 @st.dialog("🎬 영화 상세", width="large")
 def 영화팝업(row, tmdb_api_key):
-    poster    = 포스터주소가져오기(row, tmdb_api_key)
-    title     = str(row["영화명"])
-    country   = str(row["국가"])
-    genre     = str(row["장르"])
-    subgenre  = str(row["세부장르"])
-    year      = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
-    runtime   = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
-    rating    = "-" if pd.isna(row["평점"])    else f"{float(row['평점']):.1f}"
-    director  = str(row["감독"])
-    cast      = str(row["출연진"])
-    age_rating= str(row["연령등급"])
-    one_liner = str(row["한줄요약"])
-    synopsis  = str(row["줄거리"])
-    awards    = str(row["수상여부"])
-    series    = str(row["시리즈"])
-    review    = str(row["대표리뷰"])
-    ott_list  = 태그분리(row["OTT"])
+    poster       = 포스터주소가져오기(row, tmdb_api_key)
+    title        = str(row["영화명"])
+    country      = str(row["국가"])
+    genre        = str(row["장르"])
+    subgenre     = str(row["세부장르"])
+    year         = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
+    runtime      = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
+    rating       = "-" if pd.isna(row["평점"])    else f"{float(row['평점']):.1f}"
+    director     = str(row["감독"])
+    cast         = str(row["출연진"])
+    age_rating   = str(row["연령등급"])
+    one_liner    = str(row["한줄요약"])
+    synopsis     = str(row["줄거리"])
+    awards       = str(row["수상여부"])
+    series       = str(row["시리즈"])
+    review       = str(row["대표리뷰"])
+    ott_list     = 태그분리(row["OTT"])
     emotion_tags   = 태그분리(row["감정태그"])
     situation_tags = 태그분리(row["상황태그"])
     feature_tags   = 태그분리(row["특징태그"])
-    audience  = 숫자표시(row["관객수"])
-    gross     = 금액표시(row["글로벌흥행액"])
-    trailer_url = str(row["예고편URL"])
+    audience     = 숫자표시(row["관객수"])
+    gross        = 금액표시(row["글로벌흥행액"])
+    trailer_url  = str(row["예고편URL"])
 
-    # ── 다이얼로그 내부 스타일 (unsafe_allow_html 단독 사용) ──
-    st.markdown("""
-<style>
-[data-testid="stDialog"] { max-width:860px !important; }
-[data-testid="stDialog"] [data-testid="stVerticalBlock"] { gap:0.3rem !important; }
-.pd-badge {
-    display:inline-block; padding:3px 10px; border-radius:999px;
-    font-size:.75rem; font-weight:600; margin:2px;
-}
-.pd-green  { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
-.pd-blue   { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; }
-.pd:yellow { background:#fef9c3; color:#a16207; border:1px solid #fde047; }
-.pd-orange { background:#ffedd5; color:#c2410c; border:1px solid #fed7aa; }
-.pd-divider { border:none; border-top:1px solid #e2e8f0; margin:6px 0; }
-</style>
-""", unsafe_allow_html=True)
-
-    # ── 2열 레이아웃: 포스터 | 정보 ──
+    # ── 2열: 왼쪽 포스터(고정) | 오른쪽 정보(스크롤 컨테이너) ──
     col_img, col_info = st.columns([1, 1.9], gap="medium")
 
     with col_img:
@@ -1493,70 +1476,77 @@ def 영화팝업(row, tmdb_api_key):
         st.link_button("▶ 예고편 검색", trailer_url, use_container_width=True)
         b1, b2 = st.columns(2)
         with b1:
-            label_wish = "❤️ 찜됨" if title in st.session_state["wishlist"] else "🤍 찜"
-            if st.button(label_wish, use_container_width=True, key=f"pw_{title}"):
+            lbl_w = "❤️ 찜됨" if title in st.session_state["wishlist"] else "🤍 찜"
+            if st.button(lbl_w, use_container_width=True, key=f"pw_{title}"):
                 리스트토글("wishlist", title); st.rerun()
         with b2:
-            label_watch = "✅ 봄" if title in st.session_state["watched"] else "☐ 봤어요"
-            if st.button(label_watch, use_container_width=True, key=f"pv_{title}"):
+            lbl_v = "✅ 봄" if title in st.session_state["watched"] else "☐ 봤어요"
+            if st.button(lbl_v, use_container_width=True, key=f"pv_{title}"):
                 리스트토글("watched", title); st.rerun()
 
     with col_info:
-        # 제목
-        st.markdown(f"### {title}")
-        st.caption(f"🌏 {country}  |  🎬 {genre} · {subgenre}  |  📅 {year}  |  ⏱ {runtime}  |  🔞 {age_rating}  |  ⭐ {rating}")
-        if series.strip():
-            st.caption(f"📺 시리즈: **{series}**")
+        # 오른쪽 전체를 스크롤 컨테이너로 감쌈
+        with st.container(height=520, border=False):
 
-        # 한줄요약
-        st.info(f'"{one_liner}"')
+            # 제목 & 메타
+            st.markdown(f"### {title}")
+            st.caption(
+                f"🌏 {country}  |  🎬 {genre} · {subgenre}  |  "
+                f"📅 {year}  |  ⏱ {runtime}  |  🔞 {age_rating}  |  ⭐ {rating}"
+            )
+            if series.strip():
+                st.caption(f"📺 시리즈: **{series}**")
 
-        # 통계
-        s1, s2, s3 = st.columns(3)
-        s1.metric("⭐ 평점", rating)
-        s2.metric("👥 관객수", audience)
-        s3.metric("💰 글로벌 흥행", gross)
+            # 한줄요약
+            st.info(f'"{one_liner}"')
 
-        st.divider()
+            # 통계
+            s1, s2, s3 = st.columns(3)
+            s1.metric("⭐ 평점", rating)
+            s2.metric("👥 관객수", audience)
+            s3.metric("💰 흥행액", gross)
 
-        # 기본 정보
-        st.markdown("**📋 기본 정보**")
-        st.markdown(f"- **감독:** {director}")
-        st.markdown(f"- **출연진:** {cast}")
-        st.markdown(f"- **연령등급:** {age_rating}")
-        if awards.strip():
-            st.markdown(f"- **수상:** {awards}")
+            st.divider()
 
-        st.divider()
+            # 기본 정보
+            st.markdown("**📋 기본 정보**")
+            st.markdown(f"- **감독:** {director}")
+            st.markdown(f"- **출연진:** {cast}")
+            st.markdown(f"- **연령등급:** {age_rating}")
+            if awards.strip():
+                st.markdown(f"- **수상:** {awards}")
 
-        # 줄거리
-        st.markdown("**📖 줄거리**")
-        st.markdown(f"> {synopsis}")
+            st.divider()
 
-        st.divider()
+            # 줄거리
+            st.markdown("**📖 줄거리**")
+            st.markdown(f"> {synopsis}")
 
-        # 태그
-        st.markdown("**🏷️ 태그**")
-        all_tags = (
-            [f"🟢 {t}" for t in emotion_tags] +
-            [f"🔵 {t}" for t in situation_tags] +
-            [f"🟣 {t}" for t in feature_tags]
-        )
-        if all_tags:
-            st.markdown("  ".join(f"`{t}`" for t in all_tags))
-        else:
-            st.caption("태그 없음")
+            st.divider()
 
-        # OTT
-        if ott_list:
-            st.markdown("**📺 OTT 플랫폼**")
-            st.markdown("  ".join(f"`▶ {o}`" for o in ott_list))
+            # 태그
+            st.markdown("**🏷️ 감정 · 상황 태그**")
+            all_tags = (
+                [f"🟢 {t}" for t in emotion_tags] +
+                [f"🔵 {t}" for t in situation_tags] +
+                [f"🟣 {t}" for t in feature_tags]
+            )
+            if all_tags:
+                st.markdown("  ".join(f"`{t}`" for t in all_tags))
+            else:
+                st.caption("태그 없음")
 
-        st.divider()
+            # OTT
+            if ott_list:
+                st.markdown("**📺 OTT 플랫폼**")
+                st.markdown("  ".join(f"`▶ {o}`" for o in ott_list))
 
-        # 대표 리뷰
-        st.markdown("**💬 대표 리뷰**")
-        st.warning(f'"{review}"')
+            st.divider()
+
+            # 대표 리뷰
+            st.markdown("**💬 대표 리뷰**")
+            st.warning(f'"{review}"')
+
 
 def 카드UI(row, tmdb_api_key):
     st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
