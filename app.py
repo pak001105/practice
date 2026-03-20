@@ -45,6 +45,8 @@ COLUMN_ALIASES = {
     "예고편URL": ["예고편URL", "trailer_url"],
     "포스터URL": ["포스터URL", "poster_url"],
     "포스터검색어": ["포스터검색어", "poster_query"],
+    "수상여부": ["수상여부", "awards"],
+    "대표리뷰": ["대표리뷰", "featured_review"],
 }
 
 표시컬럼 = list(COLUMN_ALIASES.keys())
@@ -232,6 +234,38 @@ def 시리즈추출(영화명):
     return ""
 
 
+def 수상여부생성(영화명):
+    awards_map = {
+        "기생충": "아카데미 작품상 포함 주요 국제영화제 수상",
+        "조커": "베니스국제영화제 황금사자상, 아카데미 주요 부문 수상",
+        "라라랜드": "아카데미 다수 부문 수상",
+        "킹스 스피치": "아카데미 작품상 포함 주요 부문 수상",
+        "보헤미안 랩소디": "아카데미 주요 부문 수상",
+        "1917": "골든글로브 작품상, 주요 시상식 수상",
+        "센과 치히로의 행방불명": "아카데미 장편애니메이션상 수상",
+        "어느 가족": "칸영화제 황금종려상 수상",
+        "헤어질 결심": "칸영화제 감독상 수상",
+        "올드보이": "칸영화제 심사위원대상 수상",
+        "판의 미로": "아카데미 기술 부문 수상",
+        "와호장룡": "아카데미 외국어영화상 포함 주요 부문 수상",
+    }
+    return awards_map.get(영화명, "흥행 및 평단 호평")
+
+
+def 대표리뷰생성(장르, 영화명):
+    mapping = {
+        "액션": f"{영화명}은 속도감과 몰입감이 좋아서 큰 화면으로 볼수록 매력이 살아납니다.",
+        "드라마": f"{영화명}은 감정선이 차곡차곡 쌓여서 보고 난 뒤 여운이 오래 남는 작품입니다.",
+        "스릴러": f"{영화명}은 긴장감을 오래 유지하면서도 전개가 흥미롭게 이어지는 편입니다.",
+        "로맨스": f"{영화명}은 감성적인 분위기와 관계의 흐름을 섬세하게 담아낸 작품입니다.",
+        "애니메이션": f"{영화명}은 보기 편하면서도 따뜻한 메시지가 남는 작품입니다.",
+        "판타지": f"{영화명}은 세계관과 비주얼이 강점이라 몰입해서 보기 좋습니다.",
+        "코미디": f"{영화명}은 분위기를 가볍게 만들고 싶을 때 보기 좋은 영화입니다.",
+        "SF": f"{영화명}은 설정과 세계관을 따라가는 재미가 큰 작품입니다.",
+    }
+    return mapping.get(장르, f"{영화명}은 지금 분위기에 맞춰 보기 좋은 추천작입니다.")
+
+
 def 출연진생성(국가, 장르, idx):
     pools = {
         "한국": ["송강호", "황정민", "이병헌", "전지현", "정우성", "박정민", "마동석", "김혜수"],
@@ -323,29 +357,12 @@ def 기본데이터생성():
             ("왕의 남자", 2005, "드라마", 119, 7.4, "이준익", "The King and the Clown"),
             ("실미도", 2003, "액션", 135, 7.1, "강우석", "Silmido"),
             ("괴물", 2006, "스릴러", 119, 7.1, "봉준호", "The Host 2006"),
-            ("헤어질 결심", 2022, "로맨스", 138, 7.3, "박찬욱", "Decision to Leave"),
-            ("과속스캔들", 2008, "코미디", 108, 7.2, "강형철", "Scandal Makers"),
-            ("광해, 왕이 된 남자", 2012, "드라마", 131, 7.8, "추창민", "Masquerade"),
-            ("엑시트", 2019, "액션", 103, 7.0, "이상근", "Exit"),
-            ("내부자들", 2015, "드라마", 130, 7.8, "우민호", "Inside Men"),
-            ("1987", 2017, "드라마", 129, 7.8, "장준환", "1987 When the Day Comes"),
-            ("건축학개론", 2012, "로맨스", 118, 7.2, "이용주", "Architecture 101"),
-            ("늑대소년", 2012, "판타지", 125, 7.2, "조성희", "A Werewolf Boy"),
-            ("한산: 용의 출현", 2022, "액션", 129, 6.6, "김한민", "Hansan Rising Dragon"),
-            ("검사외전", 2016, "코미디", 126, 6.7, "이일형", "A Violent Prosecutor"),
-            ("말아톤", 2005, "드라마", 117, 7.7, "정윤철", "Marathon"),
-            ("써니", 2011, "코미디", 124, 7.8, "강형철", "Sunny"),
-            ("부당거래", 2010, "스릴러", 119, 7.2, "류승완", "The Unjust"),
-            ("마더", 2009, "스릴러", 129, 7.8, "봉준호", "Mother 2009"),
-            ("타짜", 2006, "드라마", 139, 7.2, "최동훈", "Tazza The High Rollers"),
-            ("추격자", 2008, "스릴러", 125, 7.8, "나홍진", "The Chaser"),
         ],
         "영국": [
             ("007 스카이폴", 2012, "액션", 143, 7.8, "샘 멘데스", "Skyfall"),
             ("해리 포터와 죽음의 성물 2", 2011, "판타지", 130, 8.1, "데이비드 예이츠", "Harry Potter and the Deathly Hallows Part 2"),
             ("킹스 스피치", 2010, "드라마", 118, 8.0, "톰 후퍼", "The King's Speech"),
             ("노팅 힐", 1999, "로맨스", 124, 7.2, "로저 미첼", "Notting Hill"),
-            ("패딩턴 2", 2017, "애니메이션", 103, 7.8, "폴 킹", "Paddington 2"),
         ],
         "스페인": [
             ("판의 미로", 2006, "판타지", 118, 8.2, "기예르모 델 토로", "Pan's Labyrinth"),
@@ -404,6 +421,8 @@ def 기본데이터생성():
                 "예고편URL": 예고편URL생성(포스터검색어),
                 "포스터URL": "",
                 "포스터검색어": 포스터검색어,
+                "수상여부": 수상여부생성(영화명),
+                "대표리뷰": 대표리뷰생성(장르, 영화명),
             })
             idx += 1
 
@@ -447,7 +466,8 @@ def 데이터불러오기(uploaded_file=None, uploaded_name=None):
     문자컬럼 = [
         "영화명", "시대구분", "국가", "장르", "세부장르", "감독", "출연진", "연령등급",
         "한줄요약", "짧은소개", "줄거리", "감정태그", "상황태그", "특징태그",
-        "해시태그", "시리즈", "OTT", "예고편URL", "포스터URL", "포스터검색어"
+        "해시태그", "시리즈", "OTT", "예고편URL", "포스터URL", "포스터검색어",
+        "수상여부", "대표리뷰"
     ]
     for col in 문자컬럼:
         out[col] = out[col].fillna("").astype(str).str.strip()
@@ -540,34 +560,25 @@ def 스타일적용(다크모드=True):
                 {bg};
             color: {main_text};
         }}
-
         .block-container {{
             max-width: 1480px;
             padding-top: 1rem;
             padding-bottom: 2rem;
         }}
-
-        /* 상단 흰 버스 같은 흐린 글씨 문제 해결 */
-        h1, h2, h3, h4, h5, h6,
-        p, label, div, span,
-        .stMarkdown, .stCaption,
-        [data-testid="stMetricValue"],
-        [data-testid="stMetricLabel"],
-        [data-testid="stExpander"] * {{
+        h1, h2, h3, h4, h5, h6, p, label, div, span,
+        .stMarkdown, .stCaption, [data-testid="stMetricValue"],
+        [data-testid="stMetricLabel"], [data-testid="stExpander"] * {{
             color: {main_text} !important;
             opacity: 1 !important;
         }}
-
         section[data-testid="stSidebar"] * {{
             color: {sidebar_text} !important;
         }}
-
         section[data-testid="stSidebar"] input,
         section[data-testid="stSidebar"] textarea {{
             color: {sidebar_text} !important;
             -webkit-text-fill-color: {sidebar_text} !important;
         }}
-
         .hero-wrap {{
             position: relative;
             min-height: 430px;
@@ -578,7 +589,6 @@ def 스타일적용(다크모드=True):
             box-shadow: 0 20px 60px rgba(0,0,0,.35);
             background: #0f172a;
         }}
-
         .hero-bg {{
             position: absolute;
             inset: 0;
@@ -586,20 +596,17 @@ def 스타일적용(다크모드=True):
             height: 100%;
             object-fit: cover;
         }}
-
         .hero-overlay {{
             position: absolute;
             inset: 0;
             background: linear-gradient(90deg, rgba(3,7,18,.94) 0%, rgba(3,7,18,.65) 45%, rgba(3,7,18,.20) 100%);
         }}
-
         .hero-content {{
             position: relative;
             z-index: 2;
             padding: 38px;
             max-width: 760px;
         }}
-
         .hero-badge {{
             display:inline-block;
             padding:7px 14px;
@@ -609,7 +616,6 @@ def 스타일적용(다크모드=True):
             font-size:.82rem;
             margin-bottom:14px;
         }}
-
         .hero-title {{
             font-size:2.8rem;
             font-weight:800;
@@ -617,27 +623,23 @@ def 스타일적용(다크모드=True):
             margin-bottom:12px;
             color:#fff !important;
         }}
-
         .hero-meta {{
             font-size:.96rem;
             color:#e5edf7 !important;
             margin-bottom:14px;
         }}
-
         .hero-desc {{
             font-size:1rem;
             color:#e5edf7 !important;
             line-height:1.7;
             margin-bottom:14px;
         }}
-
         .chip-row {{
             display:flex;
             flex-wrap:wrap;
             gap:8px;
             margin-bottom:18px;
         }}
-
         .chip {{
             padding:8px 14px;
             border-radius:999px;
@@ -646,13 +648,11 @@ def 스타일적용(다크모드=True):
             font-size:.85rem;
             border:1px solid rgba(255,255,255,.10);
         }}
-
         .hero-stats {{
             display:flex;
             gap:12px;
             flex-wrap:wrap;
         }}
-
         .hero-stat {{
             min-width:120px;
             padding:14px 16px;
@@ -660,46 +660,39 @@ def 스타일적용(다크모드=True):
             background:rgba(255,255,255,.08);
             border:1px solid rgba(255,255,255,.10);
         }}
-
         .hero-stat-label {{
             color:#d1d5db !important;
             font-size:.78rem;
             margin-bottom:4px;
         }}
-
         .hero-stat-value {{
             color:#fff !important;
             font-size:1.05rem;
             font-weight:700;
         }}
-
         .section-title {{
             font-size:1.22rem;
             font-weight:800;
             margin:8px 0 16px 0;
             color:{main_text} !important;
         }}
-
         .movie-card {{
             border-radius:22px;
             overflow:hidden;
-            margin-bottom:18px;
+            margin-bottom:12px;
             background:{card_bg};
             border:1px solid {border};
             box-shadow:0 12px 30px rgba(0,0,0,.18);
             transition:transform .18s ease, box-shadow .18s ease;
         }}
-
         .movie-card:hover {{
             transform: translateY(-4px);
             box-shadow:0 16px 36px rgba(0,0,0,.28);
         }}
-
         .poster-wrap {{
             position:relative;
             background:#0f172a;
         }}
-
         .poster-img {{
             width:100%;
             height:340px;
@@ -707,7 +700,6 @@ def 스타일적용(다크모드=True):
             display:block;
             background:#0f172a;
         }}
-
         .poster-top-badges {{
             position:absolute;
             top:12px;
@@ -719,7 +711,6 @@ def 스타일적용(다크모드=True):
             z-index:3;
             pointer-events:none;
         }}
-
         .poster-badge {{
             display:inline-block;
             padding:6px 10px;
@@ -729,7 +720,6 @@ def 스타일적용(다크모드=True):
             font-size:.75rem;
             border:1px solid rgba(255,255,255,.10);
         }}
-
         .poster-hover {{
             position:absolute;
             inset:0;
@@ -742,11 +732,9 @@ def 스타일적용(다크모드=True):
             padding:14px;
             z-index:2;
         }}
-
         .movie-card:hover .poster-hover {{
             opacity:1;
         }}
-
         .poster-hover-box {{
             background:rgba(15,23,42,.82);
             border:1px solid rgba(255,255,255,.10);
@@ -757,11 +745,9 @@ def 스타일적용(다크모드=True):
             line-height:1.45;
             max-width:92%;
         }}
-
         .card-info {{
-            padding:14px 14px 16px 14px;
+            padding:14px 14px 12px 14px;
         }}
-
         .card-title {{
             font-size:1rem;
             font-weight:800;
@@ -770,68 +756,58 @@ def 스타일적용(다크모드=True):
             margin-bottom:6px;
             min-height:2.7em;
         }}
-
         .card-meta {{
             font-size:.84rem;
             color:{sub} !important;
             margin-bottom:8px;
             line-height:1.45;
         }}
-
         .card-summary {{
             font-size:.83rem;
             color:{sub} !important;
             line-height:1.5;
             min-height:2.8em;
         }}
-
         .detail-panel {{
             background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78));
             border:1px solid rgba(255,255,255,.08);
             border-radius:26px;
             padding:26px;
         }}
-
         .detail-head {{
             font-size:1.5rem;
             font-weight:800;
             margin-bottom:8px;
             color:#fff !important;
         }}
-
         .detail-meta {{
             color:{sub} !important;
             font-size:.96rem;
             margin-bottom:16px;
         }}
-
         .detail-grid {{
             display:grid;
             grid-template-columns:repeat(2, minmax(0, 1fr));
             gap:12px;
             margin-top:18px;
         }}
-
         .detail-box {{
             background:rgba(255,255,255,.04);
             border:1px solid rgba(255,255,255,.06);
             border-radius:18px;
             padding:14px 16px;
         }}
-
         .detail-box-label {{
             font-size:.78rem;
             color:#cbd5e1 !important;
             margin-bottom:5px;
         }}
-
         .detail-box-value {{
             font-size:.95rem;
             color:#fff !important;
             font-weight:600;
             line-height:1.45;
         }}
-
         .rail-card {{
             background:{card_bg};
             border:1px solid {border};
@@ -839,20 +815,17 @@ def 스타일적용(다크모드=True):
             padding:14px 16px;
             margin-bottom:12px;
         }}
-
         .rail-title {{
             font-size:.98rem;
             font-weight:700;
             margin-bottom:5px;
             color:{main_text} !important;
         }}
-
         .rail-sub {{
             font-size:.84rem;
             color:{sub} !important;
             line-height:1.5;
         }}
-
         .page-box {{
             padding:12px 14px;
             border-radius:18px;
@@ -944,19 +917,6 @@ def 히어로HTML생성(row, tmdb_api_key):
     """
 
 
-def 추천섹션(title, data, tmdb_api_key, cols_per_row=5):
-    st.markdown(f"<div class='section-title'>{title}</div>", unsafe_allow_html=True)
-    if len(data) == 0:
-        st.info("표시할 영화가 없습니다.")
-        return
-    for start in range(0, len(data), cols_per_row):
-        chunk = data.iloc[start:start + cols_per_row]
-        cols = st.columns(cols_per_row)
-        for col, (_, row) in zip(cols, chunk.iterrows()):
-            with col:
-                st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
-
-
 def 세션초기화():
     if "wishlist" not in st.session_state:
         st.session_state["wishlist"] = []
@@ -970,6 +930,8 @@ def 세션초기화():
         st.session_state["user_review"] = {}
     if "현재페이지" not in st.session_state:
         st.session_state["현재페이지"] = 1
+    if "selected_movie" not in st.session_state:
+        st.session_state["selected_movie"] = None
 
 
 def 리스트토글(key, value):
@@ -979,6 +941,60 @@ def 리스트토글(key, value):
     else:
         arr.append(value)
     st.session_state[key] = arr
+
+
+@st.dialog("영화 상세 정보", width="large")
+def 영화상세팝업(row, tmdb_api_key):
+    title = str(row["영화명"])
+
+    top1, top2 = st.columns([1, 1.5])
+    with top1:
+        st.image(포스터주소가져오기(row, tmdb_api_key), use_container_width=True)
+        st.link_button("▶ 예고편 보기", str(row["예고편URL"]), use_container_width=True)
+
+    with top2:
+        st.subheader(title)
+        st.write(f"**한 줄 요약:** {row['한줄요약']}")
+        st.write(f"**짧은 소개:** {row['짧은소개']}")
+        st.write(f"**줄거리:** {row['줄거리']}")
+        st.write(f"**감독:** {row['감독']}")
+        st.write(f"**출연진:** {row['출연진']}")
+        st.write(f"**연령등급:** {row['연령등급']}")
+        st.write(f"**장르 / 세부장르:** {row['장르']} / {row['세부장르']}")
+        st.write(f"**OTT:** {row['OTT']}")
+        st.write(f"**시리즈 / 세계관:** {row['시리즈'] if str(row['시리즈']).strip() else '-'}")
+        st.write(f"**수상 여부:** {row['수상여부']}")
+        st.write(f"**대표 리뷰:** {row['대표리뷰']}")
+
+    s1, s2, s3, s4 = st.columns(4)
+    s1.metric("평점", f"★ {('-' if pd.isna(row['평점']) else round(float(row['평점']), 1))}")
+    s2.metric("관객수", 숫자표시(row["관객수"]))
+    s3.metric("글로벌 흥행액", 금액표시(row["글로벌흥행액"]))
+    s4.metric("러닝타임", "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분")
+
+    st.write(f"**감정 태그:** {목록문자열(태그분리(row['감정태그']))}")
+    st.write(f"**상황 태그:** {목록문자열(태그분리(row['상황태그']))}")
+    st.write(f"**특징 태그:** {목록문자열(태그분리(row['특징태그']))}")
+    st.write(f"**해시태그:** {목록문자열(태그분리(row['해시태그']))}")
+
+    user_score = st.slider("내 평점", 0.0, 10.0, float(st.session_state["user_rating"].get(title, 8.0)), 0.5, key=f"dialog_score_{title}")
+    user_review = st.text_area("내 한 줄 리뷰", value=st.session_state["user_review"].get(title, ""), height=90, key=f"dialog_review_{title}")
+
+    b1, b2, b3, b4 = st.columns(4)
+    with b1:
+        if st.button("🤍 찜하기 / 해제", use_container_width=True, key=f"wish_{title}"):
+            리스트토글("wishlist", title)
+    with b2:
+        if st.button("✅ 본 영화", use_container_width=True, key=f"watched_{title}"):
+            리스트토글("watched", title)
+    with b3:
+        if st.button("🔁 다시 보기", use_container_width=True, key=f"rewatch_{title}"):
+            리스트토글("rewatch", title)
+    with b4:
+        if st.button("💾 내 평가 저장", use_container_width=True, key=f"save_{title}"):
+            st.session_state["user_rating"][title] = user_score
+            st.session_state["user_review"][title] = user_review
+            st.success("저장되었습니다.")
 
 
 def 메인():
@@ -1082,23 +1098,8 @@ def 메인():
         st.warning("조건에 맞는 영화가 없습니다. 필터를 조금 줄여보세요.")
         st.stop()
 
-    선택영화명 = st.selectbox("대표로 볼 영화 선택", filtered["영화명"].tolist(), index=0)
-    선택행 = filtered[filtered["영화명"] == 선택영화명].iloc[0]
-
-    st.markdown(히어로HTML생성(선택행, tmdb_api_key), unsafe_allow_html=True)
-
-    a1, a2, a3, a4 = st.columns(4)
-    with a1:
-        if st.button("🤍 찜하기 / 해제", use_container_width=True):
-            리스트토글("wishlist", 선택영화명)
-    with a2:
-        if st.button("✅ 본 영화 체크", use_container_width=True):
-            리스트토글("watched", 선택영화명)
-    with a3:
-        if st.button("🔁 다시 보고 싶음", use_container_width=True):
-            리스트토글("rewatch", 선택영화명)
-    with a4:
-        st.link_button("▶ 예고편 보기", str(선택행["예고편URL"]), use_container_width=True)
+    대표영화 = filtered.iloc[0]
+    st.markdown(히어로HTML생성(대표영화, tmdb_api_key), unsafe_allow_html=True)
 
     전체페이지수 = max(1, math.ceil(len(filtered) / 페이지당개수))
     if st.session_state["현재페이지"] > 전체페이지수:
@@ -1123,110 +1124,32 @@ def 메인():
     끝 = 시작 + 페이지당개수
     page_df = filtered.iloc[시작:끝].copy()
 
-    추천섹션("지금 많이 보는 영화", page_df, tmdb_api_key, cols_per_row=5)
-    추천섹션("한국 흥행작 모음", df[df["국가"] == "한국"].sort_values("관객수", ascending=False).head(10), tmdb_api_key, cols_per_row=5)
-    추천섹션("감성 로맨스 모음", df[df["장르"] == "로맨스"].sort_values("평점", ascending=False).head(10), tmdb_api_key, cols_per_row=5)
-    추천섹션("몰입감 높은 스릴러", df[df["장르"] == "스릴러"].sort_values("평점", ascending=False).head(10), tmdb_api_key, cols_per_row=5)
+    st.markdown("<div class='section-title'>지금 많이 보는 영화</div>", unsafe_allow_html=True)
+    cols_per_row = 5
+    for start in range(0, len(page_df), cols_per_row):
+        chunk = page_df.iloc[start:start + cols_per_row]
+        cols = st.columns(cols_per_row)
+        for col, (_, row) in zip(cols, chunk.iterrows()):
+            with col:
+                st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
+                if st.button("상세 보기", key=f"detail_{row['영화명']}", use_container_width=True):
+                    st.session_state["selected_movie"] = row["영화명"]
+                    영화상세팝업(row, tmdb_api_key)
 
-    st.markdown("<div class='section-title'>선택한 영화 상세</div>", unsafe_allow_html=True)
-    info1, info2 = st.columns([1.0, 2.0])
-    with info1:
-        st.image(포스터주소가져오기(선택행, tmdb_api_key), use_container_width=True)
-    with info2:
-        st.markdown("<div class='detail-panel'>", unsafe_allow_html=True)
-        st.markdown(f"<div class='detail-head'>{escape(str(선택행['영화명']))}</div>", unsafe_allow_html=True)
-        st.markdown(
-            f"<div class='detail-meta'>{escape(str(선택행['국가']))} · {escape(str(선택행['장르']))} · "
-            f"{escape(str(선택행['세부장르']))} · {('-' if pd.isna(선택행['개봉연도']) else int(선택행['개봉연도']))} · "
-            f"{('-' if pd.isna(선택행['상영시간']) else str(int(선택행['상영시간'])) + '분')} · "
-            f"{escape(str(선택행['연령등급']))}</div>",
-            unsafe_allow_html=True
-        )
-        st.markdown(f"**한 줄 요약**: {선택행['한줄요약']}")
-        st.markdown(f"**짧은 소개**: {선택행['짧은소개']}")
-        st.markdown(f"**줄거리**: {선택행['줄거리']}")
-        st.markdown(f"**감독**: {선택행['감독']}")
-        st.markdown(f"**출연진**: {선택행['출연진']}")
-        st.markdown(f"**OTT 제공**: {선택행['OTT']}")
-        if str(선택행["시리즈"]).strip():
-            st.markdown(f"**시리즈 / 세계관**: {선택행['시리즈']}")
-
-        st.markdown(
-            f"""
-            <div class='detail-grid'>
-                <div class='detail-box'><div class='detail-box-label'>평점</div><div class='detail-box-value'>★ {('-' if pd.isna(선택행['평점']) else round(float(선택행['평점']), 1))}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>관객수</div><div class='detail-box-value'>{숫자표시(선택행['관객수'])}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>글로벌 흥행액</div><div class='detail-box-value'>{금액표시(선택행['글로벌흥행액'])}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>러닝타임 구간</div><div class='detail-box-value'>{러닝타임구간(선택행['상영시간'])}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>감정 태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['감정태그'])))}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>상황 태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['상황태그'])))}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>특징 태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['특징태그'])))}</div></div>
-                <div class='detail-box'><div class='detail-box-label'>해시태그</div><div class='detail-box-value'>{escape(목록문자열(태그분리(선택행['해시태그'])))}</div></div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='section-title'>내 평가 / 한 줄 리뷰</div>", unsafe_allow_html=True)
-    r1, r2 = st.columns([1, 2])
-    with r1:
-        user_score = st.slider("내 평점", 0.0, 10.0, float(st.session_state["user_rating"].get(선택영화명, 8.0)), 0.5)
-        if st.button("내 평점 저장", use_container_width=True):
-            st.session_state["user_rating"][선택영화명] = user_score
-    with r2:
-        current_review = st.session_state["user_review"].get(선택영화명, "")
-        review_text = st.text_area("한 줄 리뷰", value=current_review, height=100, placeholder="예: 긴장감이 끝까지 유지되는 반전 스릴러")
-        if st.button("리뷰 저장", use_container_width=True):
-            st.session_state["user_review"][선택영화명] = review_text
-
-    st.markdown("<div class='section-title'>비슷한 작품 추천</div>", unsafe_allow_html=True)
-    같은장르 = df[(df["장르"] == 선택행["장르"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
-    같은감독 = df[(df["감독"] == 선택행["감독"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
-    시리즈추천 = df[(df["시리즈"] == 선택행["시리즈"]) & (df["영화명"] != 선택행["영화명"])].sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6) if str(선택행["시리즈"]).strip() else df.iloc[0:0]
-    배우목록 = 태그분리(str(선택행["출연진"]).replace(" (성우)", ""))
-    같은배우 = df[df["영화명"] != 선택행["영화명"]].copy()
-    같은배우 = 같은배우[같은배우["출연진"].apply(lambda x: any(actor in str(x) for actor in 배우목록))]
-    같은배우 = 같은배우.sort_values(["평점", "개봉연도"], ascending=[False, False]).head(6)
-
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown("**같은 장르**")
-        for _, rec in 같은장르.iterrows():
-            st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['국가']))} · {escape(str(rec['장르']))} · 평점 {rec['평점']}</div></div>", unsafe_allow_html=True)
-    with c2:
-        st.markdown("**같은 감독**")
-        if len(같은감독) == 0:
-            st.info("같은 감독 작품이 없습니다.")
-        else:
-            for _, rec in 같은감독.iterrows():
-                st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['감독']))} · {escape(str(rec['국가']))}</div></div>", unsafe_allow_html=True)
-    with c3:
-        st.markdown("**같은 배우**")
-        if len(같은배우) == 0:
-            st.info("같은 배우 기반 추천이 없습니다.")
-        else:
-            for _, rec in 같은배우.iterrows():
-                st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['출연진']))}</div></div>", unsafe_allow_html=True)
-    with c4:
-        st.markdown("**같은 시리즈 / 세계관**")
-        if len(시리즈추천) == 0:
-            st.info("같은 시리즈 추천이 없습니다.")
-        else:
-            for _, rec in 시리즈추천.iterrows():
-                st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['시리즈']))}</div></div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='section-title'>내 리스트</div>", unsafe_allow_html=True)
-    l1, l2, l3 = st.columns(3)
-    with l1:
-        st.markdown("**찜한 영화**")
-        st.write(st.session_state["wishlist"] if st.session_state["wishlist"] else ["없음"])
-    with l2:
-        st.markdown("**본 영화**")
-        st.write(st.session_state["watched"] if st.session_state["watched"] else ["없음"])
-    with l3:
-        st.markdown("**다시 보고 싶은 영화**")
-        st.write(st.session_state["rewatch"] if st.session_state["rewatch"] else ["없음"])
+    st.markdown("<div class='section-title'>추천 레일</div>", unsafe_allow_html=True)
+    rec1, rec2, rec3 = st.columns(3)
+    with rec1:
+        st.markdown("**한국 흥행작 모음**")
+        for _, rec in df[df["국가"] == "한국"].sort_values("관객수", ascending=False).head(6).iterrows():
+            st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['장르']))} · 평점 {rec['평점']}</div></div>", unsafe_allow_html=True)
+    with rec2:
+        st.markdown("**감성 로맨스 모음**")
+        for _, rec in df[df["장르"] == "로맨스"].sort_values("평점", ascending=False).head(6).iterrows():
+            st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['국가']))} · 평점 {rec['평점']}</div></div>", unsafe_allow_html=True)
+    with rec3:
+        st.markdown("**몰입감 높은 스릴러**")
+        for _, rec in df[df["장르"] == "스릴러"].sort_values("평점", ascending=False).head(6).iterrows():
+            st.markdown(f"<div class='rail-card'><div class='rail-title'>{escape(str(rec['영화명']))}</div><div class='rail-sub'>{escape(str(rec['국가']))} · 평점 {rec['평점']}</div></div>", unsafe_allow_html=True)
 
     with st.expander("현재 검색 데이터 표 보기"):
         st.dataframe(page_df[표시컬럼], use_container_width=True, hide_index=True)
