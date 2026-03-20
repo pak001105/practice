@@ -1444,333 +1444,119 @@ def 카드HTML생성(row, tmdb_api_key):
 
 @st.dialog("🎬 영화 상세", width="large")
 def 영화팝업(row, tmdb_api_key):
-    poster = 포스터주소가져오기(row, tmdb_api_key)
-    title = str(row["영화명"])
-    country = str(row["국가"])
-    genre = str(row["장르"])
-    subgenre = str(row["세부장르"])
-    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
-    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
-    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
-    director = str(row["감독"])
-    cast = str(row["출연진"])
-    age_rating = str(row["연령등급"])
+    poster    = 포스터주소가져오기(row, tmdb_api_key)
+    title     = str(row["영화명"])
+    country   = str(row["국가"])
+    genre     = str(row["장르"])
+    subgenre  = str(row["세부장르"])
+    year      = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
+    runtime   = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
+    rating    = "-" if pd.isna(row["평점"])    else f"{float(row['평점']):.1f}"
+    director  = str(row["감독"])
+    cast      = str(row["출연진"])
+    age_rating= str(row["연령등급"])
     one_liner = str(row["한줄요약"])
-    synopsis = str(row["줄거리"])
-    awards = str(row["수상여부"])
-    series = str(row["시리즈"])
-    review = str(row["대표리뷰"])
-    ott_list = 태그분리(row["OTT"])
-    emotion_tags = 태그분리(row["감정태그"])
+    synopsis  = str(row["줄거리"])
+    awards    = str(row["수상여부"])
+    series    = str(row["시리즈"])
+    review    = str(row["대표리뷰"])
+    ott_list  = 태그분리(row["OTT"])
+    emotion_tags   = 태그분리(row["감정태그"])
     situation_tags = 태그분리(row["상황태그"])
-    feature_tags = 태그분리(row["특징태그"])
-    audience = 숫자표시(row["관객수"])
-    gross = 금액표시(row["글로벌흥행액"])
+    feature_tags   = 태그분리(row["특징태그"])
+    audience  = 숫자표시(row["관객수"])
+    gross     = 금액표시(row["글로벌흥행액"])
     trailer_url = str(row["예고편URL"])
 
-    # ── 태그/OTT HTML을 f-string 밖에서 미리 조립 (f-string 안 중첩 방지) ──
-    etag_html  = "".join(f"<span class='p-etag'>{escape(t)}</span>" for t in emotion_tags)
-    ptag_html  = "".join(f"<span class='p-ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags)
-    otag_html  = "".join(f"<span class='p-otag'>&#9654; {escape(o)}</span>" for o in ott_list)
-    if not otag_html:
-        otag_html = "<span style='color:#94a3b8;font-size:.78rem'>정보 없음</span>"
-    series_row = f"<div class='p-series'>&#128250; {escape(series)}</div>" if series.strip() else ""
+    # ── 다이얼로그 내부 스타일 (unsafe_allow_html 단독 사용) ──
+    st.markdown("""
+<style>
+[data-testid="stDialog"] { max-width:860px !important; }
+[data-testid="stDialog"] [data-testid="stVerticalBlock"] { gap:0.3rem !important; }
+.pd-badge {
+    display:inline-block; padding:3px 10px; border-radius:999px;
+    font-size:.75rem; font-weight:600; margin:2px;
+}
+.pd-green  { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+.pd-blue   { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; }
+.pd:yellow { background:#fef9c3; color:#a16207; border:1px solid #fde047; }
+.pd-orange { background:#ffedd5; color:#c2410c; border:1px solid #fed7aa; }
+.pd-divider { border:none; border-top:1px solid #e2e8f0; margin:6px 0; }
+</style>
+""", unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <style>
-    [data-testid="stDialog"] > div {{
-        max-height: 90vh !important;
-        overflow: hidden !important;
-    }}
-    [data-testid="stDialog"] * {{ color: #111 !important; }}
+    # ── 2열 레이아웃: 포스터 | 정보 ──
+    col_img, col_info = st.columns([1, 1.9], gap="medium")
 
-    /* ── 팝업 전체 레이아웃 ── */
-    .popup-outer {{
-        display: flex;
-        gap: 20px;
-        height: 76vh;
-        max-height: 76vh;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }}
-
-    /* 왼쪽: 포스터 고정 */
-    .popup-left {{
-        flex: 0 0 210px;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }}
-    .popup-left img {{
-        width: 100%;
-        height: 100%;
-        border-radius: 14px;
-        object-fit: cover;
-        display: block;
-    }}
-
-    /* 오른쪽: 스크롤 정보 패널 */
-    .popup-right {{
-        flex: 1;
-        overflow-y: auto;
-        padding-right: 8px;
-        padding-bottom: 8px;
-    }}
-    .popup-right::-webkit-scrollbar {{ width: 5px; }}
-    .popup-right::-webkit-scrollbar-track {{ background: #f1f5f9; border-radius: 4px; }}
-    .popup-right::-webkit-scrollbar-thumb {{ background: #94a3b8; border-radius: 4px; }}
-
-    /* 제목 영역 */
-    .p-title {{
-        font-size: 1.18rem;
-        font-weight: 800;
-        color: #0f172a !important;
-        line-height: 1.3;
-        margin-bottom: 5px;
-    }}
-    .p-meta {{
-        font-size: .82rem;
-        color: #475569 !important;
-        margin-bottom: 5px;
-        line-height: 1.5;
-    }}
-    .p-series {{
-        display: inline-block;
-        font-size: .76rem;
-        color: #1e40af !important;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 6px;
-        padding: 2px 9px;
-        margin-bottom: 6px;
-    }}
-    .p-oneliner {{
-        font-size: .88rem;
-        color: #334155 !important;
-        font-style: italic;
-        line-height: 1.55;
-        padding: 7px 11px;
-        background: #f8fafc;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        border-left: 3px solid #e2e8f0;
-    }}
-
-    /* 통계 박스 */
-    .p-stat-row {{
-        display: flex;
-        gap: 8px;
-        margin-bottom: 14px;
-    }}
-    .p-stat {{
-        flex: 1;
-        background: #f1f5f9;
-        border-radius: 10px;
-        padding: 8px 10px;
-        text-align: center;
-        border: 1px solid #e2e8f0;
-    }}
-    .p-stat-lbl {{
-        display: block;
-        font-size: .70rem;
-        color: #64748b !important;
-        margin-bottom: 2px;
-        font-weight: 500;
-    }}
-    .p-stat-val {{
-        font-size: .90rem;
-        font-weight: 800;
-        color: #0f172a !important;
-    }}
-
-    /* 섹션 구분 */
-    .p-sec {{
-        font-size: .72rem;
-        font-weight: 700;
-        color: #64748b !important;
-        letter-spacing: .04em;
-        padding: 6px 0 4px 0;
-        margin-top: 10px;
-        border-top: 1px solid #e9edf3;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }}
-    .p-sec::before {{
-        content: "";
-        display: inline-block;
-        width: 3px;
-        height: 11px;
-        background: #3b82f6;
-        border-radius: 2px;
-    }}
-
-    /* 정보 행 */
-    .p-row {{
-        display: flex;
-        gap: 8px;
-        margin-bottom: 5px;
-        align-items: flex-start;
-        padding: 4px 8px;
-        background: #f8fafc;
-        border-radius: 7px;
-    }}
-    .p-lbl {{
-        font-size: .74rem;
-        font-weight: 600;
-        color: #64748b !important;
-        min-width: 50px;
-        flex-shrink: 0;
-        padding-top: 1px;
-    }}
-    .p-val {{
-        font-size: .82rem;
-        color: #1e293b !important;
-        flex: 1;
-        line-height: 1.5;
-    }}
-
-    /* 줄거리 */
-    .p-synopsis {{
-        background: #f8fafc;
-        border-left: 3px solid #3b82f6;
-        padding: 9px 12px;
-        border-radius: 0 9px 9px 0;
-        font-size: .83rem;
-        color: #1e293b !important;
-        line-height: 1.65;
-        margin-top: 2px;
-    }}
-
-    /* 태그 */
-    .p-tags {{
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-top: 4px;
-    }}
-    .p-etag {{
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: #f0fdf4;
-        color: #15803d !important;
-        font-size: .76rem;
-        font-weight: 500;
-        border: 1px solid #bbf7d0;
-    }}
-    .p-ptag {{
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: #eff6ff;
-        color: #1d4ed8 !important;
-        font-size: .76rem;
-        font-weight: 500;
-        border: 1px solid #bfdbfe;
-    }}
-    .p-otag {{
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: #fffbeb;
-        color: #b45309 !important;
-        font-size: .76rem;
-        font-weight: 500;
-        border: 1px solid #fde68a;
-    }}
-
-    /* 리뷰 */
-    .p-review {{
-        background: #fffbeb;
-        border: 1px solid #fde68a;
-        padding: 9px 12px;
-        border-radius: 9px;
-        font-size: .82rem;
-        color: #78350f !important;
-        font-style: italic;
-        line-height: 1.6;
-        margin-top: 4px;
-    }}
-    </style>
-
-    <div class="popup-outer">
-        <!-- 왼쪽 포스터 -->
-        <div class="popup-left">
-            <img src="{escape(poster, quote=True)}" alt="{escape(title)} 포스터">
-        </div>
-
-        <!-- 오른쪽 정보 (스크롤) -->
-        <div class="popup-right">
-
-            <div class="p-title">{escape(title)}</div>
-            <div class="p-meta">
-                🌏 {escape(country)}&nbsp;&nbsp;|&nbsp;&nbsp;
-                🎬 {escape(genre)} · {escape(subgenre)}&nbsp;&nbsp;|&nbsp;&nbsp;
-                📅 {year}&nbsp;&nbsp;|&nbsp;&nbsp;
-                ⏱ {runtime}&nbsp;&nbsp;|&nbsp;&nbsp;
-                🔞 {escape(age_rating)}&nbsp;&nbsp;|&nbsp;&nbsp;
-                ⭐ {rating}
-            </div>
-            {series_row}
-            <div class="p-oneliner">"{escape(one_liner)}"</div>
-
-            <!-- 통계 -->
-            <div class="p-stat-row">
-                <div class="p-stat">
-                    <span class="p-stat-lbl">평점</span>
-                    <span class="p-stat-val">⭐ {rating}</span>
-                </div>
-                <div class="p-stat">
-                    <span class="p-stat-lbl">관객수</span>
-                    <span class="p-stat-val">{audience}명</span>
-                </div>
-                <div class="p-stat">
-                    <span class="p-stat-lbl">글로벌 흥행</span>
-                    <span class="p-stat-val">{gross}</span>
-                </div>
-            </div>
-
-            <!-- 기본 정보 -->
-            <div class="p-sec">기본 정보</div>
-            <div class="p-row"><span class="p-lbl">감독</span><span class="p-val">{escape(director)}</span></div>
-            <div class="p-row"><span class="p-lbl">출연진</span><span class="p-val">{escape(cast)}</span></div>
-            <div class="p-row"><span class="p-lbl">수상</span><span class="p-val">{escape(awards)}</span></div>
-
-            <!-- 줄거리 -->
-            <div class="p-sec">줄거리</div>
-            <div class="p-synopsis">{escape(synopsis)}</div>
-
-            <!-- 태그 -->
-            <div class="p-sec">감정 · 상황 · 특징 태그</div>
-            <div class="p-tags">
-                {etag_html}
-                {ptag_html}
-            </div>
-
-            <!-- OTT -->
-            <div class="p-sec">OTT 플랫폼</div>
-            <div class="p-tags">
-                {otag_html}
-            </div>
-
-            <!-- 리뷰 -->
-            <div class="p-sec">대표 리뷰</div>
-            <div class="p-review">💬 {escape(review)}</div>
-
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 예고편 / 찜 / 봤어요 버튼은 Streamlit 네이티브로 처리
-    bc1, bc2, bc3 = st.columns([2, 1, 1])
-    with bc1:
+    with col_img:
+        st.image(poster, use_container_width=True)
         st.link_button("▶ 예고편 검색", trailer_url, use_container_width=True)
-    with bc2:
-        in_wish = title in st.session_state["wishlist"]
-        if st.button("❤️ 찜됨" if in_wish else "🤍 찜", use_container_width=True, key=f"pw_{title}"):
-            리스트토글("wishlist", title); st.rerun()
-    with bc3:
-        in_watched = title in st.session_state["watched"]
-        if st.button("✅ 봄" if in_watched else "☐ 봤어요", use_container_width=True, key=f"pv_{title}"):
-            리스트토글("watched", title); st.rerun()
+        b1, b2 = st.columns(2)
+        with b1:
+            label_wish = "❤️ 찜됨" if title in st.session_state["wishlist"] else "🤍 찜"
+            if st.button(label_wish, use_container_width=True, key=f"pw_{title}"):
+                리스트토글("wishlist", title); st.rerun()
+        with b2:
+            label_watch = "✅ 봄" if title in st.session_state["watched"] else "☐ 봤어요"
+            if st.button(label_watch, use_container_width=True, key=f"pv_{title}"):
+                리스트토글("watched", title); st.rerun()
 
+    with col_info:
+        # 제목
+        st.markdown(f"### {title}")
+        st.caption(f"🌏 {country}  |  🎬 {genre} · {subgenre}  |  📅 {year}  |  ⏱ {runtime}  |  🔞 {age_rating}  |  ⭐ {rating}")
+        if series.strip():
+            st.caption(f"📺 시리즈: **{series}**")
+
+        # 한줄요약
+        st.info(f'"{one_liner}"')
+
+        # 통계
+        s1, s2, s3 = st.columns(3)
+        s1.metric("⭐ 평점", rating)
+        s2.metric("👥 관객수", audience)
+        s3.metric("💰 글로벌 흥행", gross)
+
+        st.divider()
+
+        # 기본 정보
+        st.markdown("**📋 기본 정보**")
+        st.markdown(f"- **감독:** {director}")
+        st.markdown(f"- **출연진:** {cast}")
+        st.markdown(f"- **연령등급:** {age_rating}")
+        if awards.strip():
+            st.markdown(f"- **수상:** {awards}")
+
+        st.divider()
+
+        # 줄거리
+        st.markdown("**📖 줄거리**")
+        st.markdown(f"> {synopsis}")
+
+        st.divider()
+
+        # 태그
+        st.markdown("**🏷️ 태그**")
+        all_tags = (
+            [f"🟢 {t}" for t in emotion_tags] +
+            [f"🔵 {t}" for t in situation_tags] +
+            [f"🟣 {t}" for t in feature_tags]
+        )
+        if all_tags:
+            st.markdown("  ".join(f"`{t}`" for t in all_tags))
+        else:
+            st.caption("태그 없음")
+
+        # OTT
+        if ott_list:
+            st.markdown("**📺 OTT 플랫폼**")
+            st.markdown("  ".join(f"`▶ {o}`" for o in ott_list))
+
+        st.divider()
+
+        # 대표 리뷰
+        st.markdown("**💬 대표 리뷰**")
+        st.warning(f'"{review}"')
 
 def 카드UI(row, tmdb_api_key):
     st.markdown(카드HTML생성(row, tmdb_api_key), unsafe_allow_html=True)
