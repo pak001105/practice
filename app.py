@@ -1468,95 +1468,167 @@ def 영화팝업(row, tmdb_api_key):
     gross = 금액표시(row["글로벌흥행액"])
     trailer_url = str(row["예고편URL"])
 
-    st.markdown("""
+    # 팝업 전체를 단일 HTML 블록으로 렌더링 — 오른쪽 정보 영역만 스크롤
+    tags_html = "".join([f"<span class='etag'>{escape(t)}</span>" for t in emotion_tags])
+    tags_html += "".join([f"<span class='ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags])
+    ott_html = "".join([f"<span class='otag'>{escape(o)}</span>" for o in ott_list]) or "-"
+    series_row = f"<div class='info-badge'>📺 {escape(series)}</div>" if series.strip() else ""
+
+    st.markdown(f"""
     <style>
-    [data-testid="stDialog"] * { color:#111 !important; }
-    [data-testid="stDialog"] .ptag {
-        display:inline-block; padding:2px 8px; border-radius:999px;
-        background:#e8f0fe; color:#1a56db !important; font-size:.70rem; margin:1px; border:1px solid #c7d7fc;
-    }
-    [data-testid="stDialog"] .otag {
-        display:inline-block; padding:2px 8px; border-radius:999px;
-        background:#fef3c7; color:#92400e !important; font-size:.70rem; margin:1px; border:1px solid #fde68a;
-    }
-    [data-testid="stDialog"] .etag {
-        display:inline-block; padding:2px 8px; border-radius:999px;
-        background:#f0fdf4; color:#166534 !important; font-size:.70rem; margin:1px; border:1px solid #bbf7d0;
-    }
-    [data-testid="stDialog"] .sbox {
-        background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;
-        padding:5px 8px; text-align:center; margin-bottom:6px;
-    }
-    [data-testid="stDialog"] .slbl { color:#64748b !important; font-size:.62rem; display:block; }
-    [data-testid="stDialog"] .sval { color:#0f172a !important; font-size:.82rem; font-weight:700; }
-    [data-testid="stDialog"] .stitle {
-        font-size:.65rem; color:#64748b !important; font-weight:700;
-        text-transform:uppercase; letter-spacing:.06em; margin:7px 0 2px 0; border-top:1px solid #f1f5f9; padding-top:6px;
-    }
-    [data-testid="stDialog"] .synbox {
-        background:#f8fafc; border-left:3px solid #3b82f6;
-        padding:6px 10px; border-radius:0 7px 7px 0;
-        font-size:.77rem; color:#1e293b !important; line-height:1.55;
-    }
-    [data-testid="stDialog"] .revbox {
-        background:#fffbeb; border:1px solid #fde68a; padding:6px 10px;
-        border-radius:7px; font-size:.75rem; color:#78350f !important; font-style:italic;
-    }
-    [data-testid="stDialog"] .irow { display:flex; gap:4px; margin-bottom:3px; align-items:flex-start; }
-    [data-testid="stDialog"] .ilbl { color:#94a3b8 !important; font-size:.68rem; min-width:48px; flex-shrink:0; }
-    [data-testid="stDialog"] .ival { color:#1e293b !important; font-size:.75rem; flex:1; line-height:1.4; }
+    /* 팝업 대화상자 높이 제한 */
+    [data-testid="stDialog"] > div {{
+        max-height: 88vh !important;
+        overflow: hidden !important;
+    }}
+    [data-testid="stDialog"] * {{ color:#111 !important; }}
+    .popup-outer {{
+        display: flex;
+        gap: 16px;
+        height: 78vh;
+        max-height: 78vh;
+    }}
+    .popup-left {{
+        flex: 0 0 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }}
+    .popup-left img {{
+        width: 100%;
+        border-radius: 12px;
+        object-fit: cover;
+        flex: 1;
+        min-height: 0;
+    }}
+    .popup-btn-row {{
+        display: flex;
+        gap: 6px;
+    }}
+    .popup-btn {{
+        flex: 1;
+        padding: 7px 4px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #111 !important;
+        font-size: .78rem;
+        font-weight: 600;
+        text-align: center;
+        cursor: default;
+    }}
+    .popup-right {{
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }}
+    /* 스크롤바 스타일 */
+    .popup-right::-webkit-scrollbar {{ width: 5px; }}
+    .popup-right::-webkit-scrollbar-track {{ background: #f1f5f9; border-radius: 4px; }}
+    .popup-right::-webkit-scrollbar-thumb {{ background: #cbd5e1; border-radius: 4px; }}
+    .popup-title {{ font-size: 1.1rem; font-weight: 800; color: #0f172a !important; margin-bottom: 2px; }}
+    .popup-meta {{ font-size: .75rem; color: #64748b !important; margin-bottom: 4px; }}
+    .popup-oneliner {{ font-size: .82rem; color: #334155 !important; font-style: italic; margin-bottom: 6px; }}
+    .info-badge {{
+        display: inline-block; font-size: .72rem; color: #1e40af !important;
+        background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;
+        padding: 2px 8px; margin-bottom: 4px;
+    }}
+    .stat-row {{ display: flex; gap: 6px; margin-bottom: 8px; }}
+    .sbox {{
+        flex: 1; background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 8px; padding: 5px 8px; text-align: center;
+    }}
+    .slbl {{ color: #64748b !important; font-size: .60rem; display: block; }}
+    .sval {{ color: #0f172a !important; font-size: .80rem; font-weight: 700; }}
+    .sec-title {{
+        font-size: .63rem; color: #94a3b8 !important; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .07em;
+        border-top: 1px solid #f1f5f9; padding-top: 6px; margin-top: 4px; margin-bottom: 3px;
+    }}
+    .irow {{ display: flex; gap: 4px; margin-bottom: 3px; }}
+    .ilbl {{ color: #94a3b8 !important; font-size: .68rem; min-width: 46px; flex-shrink: 0; }}
+    .ival {{ color: #1e293b !important; font-size: .75rem; flex: 1; line-height: 1.4; }}
+    .synbox {{
+        background: #f8fafc; border-left: 3px solid #3b82f6;
+        padding: 6px 10px; border-radius: 0 7px 7px 0;
+        font-size: .76rem; color: #1e293b !important; line-height: 1.55;
+        margin-bottom: 4px;
+    }}
+    .tag-wrap {{ display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }}
+    .ptag {{
+        display: inline-block; padding: 2px 7px; border-radius: 999px;
+        background: #e8f0fe; color: #1a56db !important; font-size: .68rem; border: 1px solid #c7d7fc;
+    }}
+    .otag {{
+        display: inline-block; padding: 2px 7px; border-radius: 999px;
+        background: #fef3c7; color: #92400e !important; font-size: .68rem; border: 1px solid #fde68a;
+    }}
+    .etag {{
+        display: inline-block; padding: 2px 7px; border-radius: 999px;
+        background: #f0fdf4; color: #166534 !important; font-size: .68rem; border: 1px solid #bbf7d0;
+    }}
+    .revbox {{
+        background: #fffbeb; border: 1px solid #fde68a; padding: 6px 10px;
+        border-radius: 7px; font-size: .74rem; color: #78350f !important; font-style: italic;
+        margin-bottom: 4px;
+    }}
     </style>
+
+    <div class="popup-outer">
+        <!-- 왼쪽: 포스터 고정 -->
+        <div class="popup-left">
+            <img src="{escape(poster, quote=True)}" alt="{escape(title)} 포스터">
+        </div>
+
+        <!-- 오른쪽: 정보 스크롤 영역 -->
+        <div class="popup-right">
+            <div class="popup-title">{escape(title)}</div>
+            <div class="popup-meta">{escape(country)} · {escape(genre)}/{escape(subgenre)} · {year} · {runtime} · {escape(age_rating)} · ★{rating}</div>
+            {series_row}
+            <div class="popup-oneliner">{escape(one_liner)}</div>
+
+            <div class="stat-row">
+                <div class="sbox"><span class="slbl">평점</span><span class="sval">★{rating}</span></div>
+                <div class="sbox"><span class="slbl">관객수</span><span class="sval">{audience}</span></div>
+                <div class="sbox"><span class="slbl">흥행액</span><span class="sval">{gross}</span></div>
+            </div>
+
+            <div class="sec-title">기본 정보</div>
+            <div class="irow"><span class="ilbl">감독</span><span class="ival">{escape(director)}</span></div>
+            <div class="irow"><span class="ilbl">출연진</span><span class="ival">{escape(cast)}</span></div>
+            <div class="irow"><span class="ilbl">수상</span><span class="ival">{escape(awards)}</span></div>
+
+            <div class="sec-title">줄거리</div>
+            <div class="synbox">{escape(synopsis)}</div>
+
+            <div class="sec-title">감정 · 태그</div>
+            <div class="tag-wrap">{tags_html}</div>
+
+            <div class="sec-title">OTT</div>
+            <div class="tag-wrap">{ott_html}</div>
+
+            <div class="sec-title">리뷰</div>
+            <div class="revbox">💬 {escape(review)}</div>
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
-    c1, c2 = st.columns([1, 1.8])
-
-    with c1:
-        st.image(poster, use_container_width=True)
-        st.link_button("▶ 예고편", trailer_url, use_container_width=True)
-        b1, b2 = st.columns(2)
-        with b1:
-            in_wish = title in st.session_state["wishlist"]
-            if st.button("❤️ 찜됨" if in_wish else "🤍 찜", use_container_width=True, key=f"pw_{title}"):
-                리스트토글("wishlist", title); st.rerun()
-        with b2:
-            in_watched = title in st.session_state["watched"]
-            if st.button("✅ 봄" if in_watched else "☐ 봤어요", use_container_width=True, key=f"pv_{title}"):
-                리스트토글("watched", title); st.rerun()
-
-    with c2:
-        st.markdown(f"**{title}**")
-        st.caption(f"{country} · {genre}/{subgenre} · {year} · {runtime} · {age_rating} · ★{rating}")
-        if series.strip():
-            st.caption(f"📺 {series}")
-        st.markdown(f"*{one_liner}*")
-
-        s1, s2, s3 = st.columns(3)
-        s1.markdown(f"<div class='sbox'><span class='slbl'>평점</span><span class='sval'>★{rating}</span></div>", unsafe_allow_html=True)
-        s2.markdown(f"<div class='sbox'><span class='slbl'>관객수</span><span class='sval'>{audience}</span></div>", unsafe_allow_html=True)
-        s3.markdown(f"<div class='sbox'><span class='slbl'>흥행액</span><span class='sval'>{gross}</span></div>", unsafe_allow_html=True)
-
-        st.markdown("<div class='stitle'>기본 정보</div>", unsafe_allow_html=True)
-        for lbl, val in [("감독", director), ("출연진", cast), ("수상", awards)]:
-            st.markdown(f"<div class='irow'><span class='ilbl'>{lbl}</span><span class='ival'>{escape(val)}</span></div>", unsafe_allow_html=True)
-
-        st.markdown("<div class='stitle'>줄거리</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='synbox'>{escape(synopsis)}</div>", unsafe_allow_html=True)
-
-        st.markdown("<div class='stitle'>태그</div>", unsafe_allow_html=True)
-        tags_html = "".join([f"<span class='etag'>{escape(t)}</span>" for t in emotion_tags])
-        tags_html += "".join([f"<span class='ptag'>{escape(t)}</span>" for t in situation_tags + feature_tags])
-        st.markdown(tags_html or "-", unsafe_allow_html=True)
-
-        st.markdown("<div class='stitle'>OTT</div>", unsafe_allow_html=True)
-        st.markdown("".join([f"<span class='otag'>{escape(o)}</span>" for o in ott_list]) or "-", unsafe_allow_html=True)
-
-        st.markdown("<div class='stitle'>리뷰</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='revbox'>💬 {escape(review)}</div>", unsafe_allow_html=True)
-
-        user_score = st.slider("내 평점", 0.0, 10.0, float(st.session_state["user_rating"].get(title, 8.0)), 0.5, key=f"ps_{title}")
-        if st.button("💾 저장", use_container_width=True, key=f"psv_{title}"):
-            st.session_state["user_rating"][title] = user_score
-            st.success("저장!")
+    # 예고편 / 찜 / 봤어요 버튼은 Streamlit 네이티브로 처리
+    bc1, bc2, bc3 = st.columns([2, 1, 1])
+    with bc1:
+        st.link_button("▶ 예고편 검색", trailer_url, use_container_width=True)
+    with bc2:
+        in_wish = title in st.session_state["wishlist"]
+        if st.button("❤️ 찜됨" if in_wish else "🤍 찜", use_container_width=True, key=f"pw_{title}"):
+            리스트토글("wishlist", title); st.rerun()
+    with bc3:
+        in_watched = title in st.session_state["watched"]
+        if st.button("✅ 봄" if in_watched else "☐ 봤어요", use_container_width=True, key=f"pv_{title}"):
+            리스트토글("watched", title); st.rerun()
 
 
 def 카드UI(row, tmdb_api_key):
