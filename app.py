@@ -470,7 +470,6 @@ def 대체포스터생성(title, genre, year):
     safe_title = escape(str(title))
     safe_genre = escape(str(genre))
     safe_year = "" if pd.isna(year) else str(int(year))
-
     svg = f"""
     <svg xmlns='http://www.w3.org/2000/svg' width='600' height='900'>
       <rect width='100%' height='100%' fill='#0f172a'/>
@@ -523,6 +522,354 @@ def 포스터주소가져오기(row, tmdb_api_key):
     return 대체포스터생성(row.get("영화명", ""), row.get("장르", ""), row.get("개봉연도", None))
 
 
+def 스타일적용(다크모드=True):
+    bg = "#070b14" if 다크모드 else "#f4f6fb"
+    main_text = "#FFFFFF" if 다크모드 else "#111111"
+    sub = "#D6DEEA" if 다크모드 else "#374151"
+    card_bg = "#111827" if 다크모드 else "#ffffff"
+    border = "#243041" if 다크모드 else "#d1d5db"
+    sidebar_text = "#111827"
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background:
+                radial-gradient(circle at top right, rgba(59,130,246,.12), transparent 28%),
+                radial-gradient(circle at top left, rgba(236,72,153,.10), transparent 24%),
+                {bg};
+            color: {main_text};
+        }}
+
+        .block-container {{
+            max-width: 1480px;
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+        }}
+
+        /* 상단 흰 버스 같은 흐린 글씨 문제 해결 */
+        h1, h2, h3, h4, h5, h6,
+        p, label, div, span,
+        .stMarkdown, .stCaption,
+        [data-testid="stMetricValue"],
+        [data-testid="stMetricLabel"],
+        [data-testid="stExpander"] * {{
+            color: {main_text} !important;
+            opacity: 1 !important;
+        }}
+
+        section[data-testid="stSidebar"] * {{
+            color: {sidebar_text} !important;
+        }}
+
+        section[data-testid="stSidebar"] input,
+        section[data-testid="stSidebar"] textarea {{
+            color: {sidebar_text} !important;
+            -webkit-text-fill-color: {sidebar_text} !important;
+        }}
+
+        .hero-wrap {{
+            position: relative;
+            min-height: 430px;
+            border-radius: 28px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,.35);
+            background: #0f172a;
+        }}
+
+        .hero-bg {{
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+
+        .hero-overlay {{
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(3,7,18,.94) 0%, rgba(3,7,18,.65) 45%, rgba(3,7,18,.20) 100%);
+        }}
+
+        .hero-content {{
+            position: relative;
+            z-index: 2;
+            padding: 38px;
+            max-width: 760px;
+        }}
+
+        .hero-badge {{
+            display:inline-block;
+            padding:7px 14px;
+            border-radius:999px;
+            background:rgba(255,255,255,.12);
+            color:#fff;
+            font-size:.82rem;
+            margin-bottom:14px;
+        }}
+
+        .hero-title {{
+            font-size:2.8rem;
+            font-weight:800;
+            line-height:1.05;
+            margin-bottom:12px;
+            color:#fff !important;
+        }}
+
+        .hero-meta {{
+            font-size:.96rem;
+            color:#e5edf7 !important;
+            margin-bottom:14px;
+        }}
+
+        .hero-desc {{
+            font-size:1rem;
+            color:#e5edf7 !important;
+            line-height:1.7;
+            margin-bottom:14px;
+        }}
+
+        .chip-row {{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-bottom:18px;
+        }}
+
+        .chip {{
+            padding:8px 14px;
+            border-radius:999px;
+            background:rgba(255,255,255,.09);
+            color:#fff !important;
+            font-size:.85rem;
+            border:1px solid rgba(255,255,255,.10);
+        }}
+
+        .hero-stats {{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }}
+
+        .hero-stat {{
+            min-width:120px;
+            padding:14px 16px;
+            border-radius:18px;
+            background:rgba(255,255,255,.08);
+            border:1px solid rgba(255,255,255,.10);
+        }}
+
+        .hero-stat-label {{
+            color:#d1d5db !important;
+            font-size:.78rem;
+            margin-bottom:4px;
+        }}
+
+        .hero-stat-value {{
+            color:#fff !important;
+            font-size:1.05rem;
+            font-weight:700;
+        }}
+
+        .section-title {{
+            font-size:1.22rem;
+            font-weight:800;
+            margin:8px 0 16px 0;
+            color:{main_text} !important;
+        }}
+
+        .movie-card {{
+            border-radius:22px;
+            overflow:hidden;
+            margin-bottom:18px;
+            background:{card_bg};
+            border:1px solid {border};
+            box-shadow:0 12px 30px rgba(0,0,0,.18);
+            transition:transform .18s ease, box-shadow .18s ease;
+        }}
+
+        .movie-card:hover {{
+            transform: translateY(-4px);
+            box-shadow:0 16px 36px rgba(0,0,0,.28);
+        }}
+
+        .poster-wrap {{
+            position:relative;
+            background:#0f172a;
+        }}
+
+        .poster-img {{
+            width:100%;
+            height:340px;
+            object-fit:cover;
+            display:block;
+            background:#0f172a;
+        }}
+
+        .poster-top-badges {{
+            position:absolute;
+            top:12px;
+            left:12px;
+            right:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            z-index:3;
+            pointer-events:none;
+        }}
+
+        .poster-badge {{
+            display:inline-block;
+            padding:6px 10px;
+            border-radius:999px;
+            background:rgba(15,23,42,.75);
+            color:#fff !important;
+            font-size:.75rem;
+            border:1px solid rgba(255,255,255,.10);
+        }}
+
+        .poster-hover {{
+            position:absolute;
+            inset:0;
+            opacity:0;
+            transition:.18s ease;
+            background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.72));
+            display:flex;
+            align-items:flex-end;
+            justify-content:flex-start;
+            padding:14px;
+            z-index:2;
+        }}
+
+        .movie-card:hover .poster-hover {{
+            opacity:1;
+        }}
+
+        .poster-hover-box {{
+            background:rgba(15,23,42,.82);
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:14px;
+            padding:10px 12px;
+            color:#fff !important;
+            font-size:.82rem;
+            line-height:1.45;
+            max-width:92%;
+        }}
+
+        .card-info {{
+            padding:14px 14px 16px 14px;
+        }}
+
+        .card-title {{
+            font-size:1rem;
+            font-weight:800;
+            line-height:1.35;
+            color:{main_text} !important;
+            margin-bottom:6px;
+            min-height:2.7em;
+        }}
+
+        .card-meta {{
+            font-size:.84rem;
+            color:{sub} !important;
+            margin-bottom:8px;
+            line-height:1.45;
+        }}
+
+        .card-summary {{
+            font-size:.83rem;
+            color:{sub} !important;
+            line-height:1.5;
+            min-height:2.8em;
+        }}
+
+        .detail-panel {{
+            background: linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.78));
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:26px;
+            padding:26px;
+        }}
+
+        .detail-head {{
+            font-size:1.5rem;
+            font-weight:800;
+            margin-bottom:8px;
+            color:#fff !important;
+        }}
+
+        .detail-meta {{
+            color:{sub} !important;
+            font-size:.96rem;
+            margin-bottom:16px;
+        }}
+
+        .detail-grid {{
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+            gap:12px;
+            margin-top:18px;
+        }}
+
+        .detail-box {{
+            background:rgba(255,255,255,.04);
+            border:1px solid rgba(255,255,255,.06);
+            border-radius:18px;
+            padding:14px 16px;
+        }}
+
+        .detail-box-label {{
+            font-size:.78rem;
+            color:#cbd5e1 !important;
+            margin-bottom:5px;
+        }}
+
+        .detail-box-value {{
+            font-size:.95rem;
+            color:#fff !important;
+            font-weight:600;
+            line-height:1.45;
+        }}
+
+        .rail-card {{
+            background:{card_bg};
+            border:1px solid {border};
+            border-radius:18px;
+            padding:14px 16px;
+            margin-bottom:12px;
+        }}
+
+        .rail-title {{
+            font-size:.98rem;
+            font-weight:700;
+            margin-bottom:5px;
+            color:{main_text} !important;
+        }}
+
+        .rail-sub {{
+            font-size:.84rem;
+            color:{sub} !important;
+            line-height:1.5;
+        }}
+
+        .page-box {{
+            padding:12px 14px;
+            border-radius:18px;
+            border:1px solid {border};
+            background:rgba(17,24,39,.65);
+            margin-bottom:20px;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def 포스터주소_html(url):
+    return escape(url, quote=True)
+
+
 def 카드HTML생성(row, tmdb_api_key):
     title = escape(str(row["영화명"]))
     country = escape(str(row["국가"]))
@@ -541,61 +888,20 @@ def 카드HTML생성(row, tmdb_api_key):
     <div class='movie-card'>
         <div class='poster-wrap'>
             <img src='{포스터주소_html(poster)}' class='poster-img' alt='{title} 포스터'>
-
             <div class='poster-top-badges'>
                 <span class='poster-badge'>{genre}</span>
                 <span class='poster-badge'>★ {rating}</span>
             </div>
-
             <div class='poster-hover'>
                 <div class='poster-hover-box'>
                     {hover_text}
                 </div>
             </div>
         </div>
-
         <div class='card-info'>
             <div class='card-title'>{title}</div>
             <div class='card-meta'>{country} · {year} · {runtime} · {age_rating}</div>
             <div class='card-summary'>{one_liner}</div>
-        </div>
-    </div>
-    """
-
-
-def 포스터주소_html(url):
-    return escape(url, quote=True)
-
-
-def 카드HTML생성(row, tmdb_api_key):
-    title = escape(str(row["영화명"]))
-    country = escape(str(row["국가"]))
-    genre = escape(str(row["장르"]))
-    year = "-" if pd.isna(row["개봉연도"]) else str(int(row["개봉연도"]))
-    runtime = "-" if pd.isna(row["상영시간"]) else f"{int(row['상영시간'])}분"
-    rating = "-" if pd.isna(row["평점"]) else f"{float(row['평점']):.1f}"
-    one_liner = escape(str(row["한줄요약"]))
-    poster = 포스터주소가져오기(row, tmdb_api_key)
-
-    return f"""
-    <div class='movie-card'>
-        <div class='poster-wrap'>
-            <img src='{포스터주소_html(poster)}' class='poster-img' alt='{title} 포스터'>
-            <div class='card-gradient'></div>
-            <div class='card-bottom'>
-                <div class='card-title'>{title}</div>
-                <div class='card-sub'>{country} · {genre} · {year} · {runtime} · ★ {rating}</div>
-                <div class='card-sub' style='margin-top:6px;'>{one_liner}</div>
-            </div>
-            <div class='card-hover'>
-                <div><b>{title}</b> ({year})</div>
-                <div>국가: {country}</div>
-                <div>장르: {genre}</div>
-                <div>상영시간: {runtime}</div>
-                <div>연령등급: {escape(str(row['연령등급']))}</div>
-                <div>OTT: {escape(str(row['OTT']))}</div>
-                <div>감독: {escape(str(row['감독']))}</div>
-            </div>
         </div>
     </div>
     """
